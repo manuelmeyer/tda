@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:int="http://www.springframework.org/schema/integration"
+	xmlns:task="http://www.springframework.org/schema/task" xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:int-ftp="http://www.springframework.org/schema/integration/ftp"
+	xsi:schemaLocation="http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd
+		http://www.springframework.org/schema/integration/ftp http://www.springframework.org/schema/integration/ftp/spring-integration-ftp.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+
+	<int:channel id="output" />
+
+	<bean id="ftpSessionFactory"
+		class="org.springframework.integration.ftp.session.DefaultFtpSessionFactory">
+		<property name="host" value="${host:localhost}" />
+		<property name="port" value="${port:21}" />
+		<property name="username" value="${username}" />
+		<property name="password" value="${password}" />
+		<property name="clientMode" value="0" />
+		<property name="fileType" value="2" />
+		<property name="bufferSize" value="100000" />
+	</bean>
+	
+	<bean name="gpgRemoteFilter" class="org.springframework.integration.ftp.filters.FtpSimplePatternFileListFilter">
+		<constructor-arg><value>${filenamepattern}</value></constructor-arg>
+	</bean>
+	<bean name="gpgLocalFilter" class="org.springframework.integration.file.filters.SimplePatternFileListFilter">
+		<constructor-arg><value>${filenamepattern}</value></constructor-arg>
+	</bean>
+
+	<int-ftp:inbound-channel-adapter id="ftpInbound"
+		phase="1000"
+		filter="gpgRemoteFilter"
+		local-filter="gpgLocalFilter"
+		channel="output" 
+		session-factory="ftpSessionFactory"
+		auto-create-local-directory="true" 
+		delete-remote-files="${deleteafterget:true}"
+		remote-directory="${remotedirectory}"
+		remote-file-separator="/" 
+		preserve-timestamp="true"
+		temporary-file-suffix=".writing"
+		local-directory="${localdirectory:/opt/SP/pivotal/local}">
+			<int:poller fixed-rate="10000" />
+	</int-ftp:inbound-channel-adapter>
+
+</beans>

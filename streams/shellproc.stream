@@ -1,0 +1,1 @@
+trigger --fixedDelay=10 | rti4tshellprocessor --propagateoutput=false --command=/Users/manuelmeyer/GitHub/rti4t-xd-modules/modules/test.sh --environmentparams=INDIR=/opt/SP/pivotal/output,OUTDIR=/temp | null

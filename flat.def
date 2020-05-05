@@ -1,0 +1,1 @@
+protocolName,imsi,lac,cellTower,startTimeUTC,timeUTC,latitude,longitude,mccmnc,msisdn,imei,transactionTarget,firstLac,firstCellTower,eventType,eventStatus,protocolDetailMap,ingestTime,processedTime

@@ -1,0 +1,1 @@
+rti4tamqp --buffersize=128 --parrallelconsumers=6 --parrallelreadercount=10 --rabbitpropertiesfile=/Users/manuelmeyer/GitHub/rti4t-xd-modules/modules/enntout.properties | rti4tfilehandler --outputdir=/Users/manuelmeyer/GitHub/rti4t-xd-modules/modules/output --filesizethreshold=10000000

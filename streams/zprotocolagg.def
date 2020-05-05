@@ -1,0 +1,1 @@
+name=zprotocolagg&deploy=true&definition=tap:stream:rabbitlors.rti4tpayloadhandler > aggregate-counter --name=protocolagg

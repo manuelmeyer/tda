@@ -1,0 +1,2 @@
+trigger --fixedDelay=10 | rti4tshellprocessor --command=/temp/demographics/config/check-demographics.sh --environmentparams=INDIR=/temp/demographics/stage,OUTDIR=/temp/demographics/in | log
+

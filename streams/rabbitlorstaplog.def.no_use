@@ -1,0 +1,1 @@
+name=rabbitlorstaplog&deploy=true&definition=tap:stream:rabbitlors.rti4tpayloadhandler > log

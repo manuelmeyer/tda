@@ -1,0 +1,152 @@
+
+allprojects {
+}
+
+subprojects {
+	apply plugin: 'java'
+	apply plugin: 'eclipse'
+	repositories {
+		maven { url 'https://repo.spring.io/plugins-release' }
+		maven { url "https://repo.spring.io/release" }
+		mavenLocal()
+		mavenCentral()
+		jcenter()
+	}
+
+	uploadArchives {
+	    repositories {
+	       flatDir {
+		   dirs 'repos'
+	       }
+	    }
+	}
+
+	dependencies {
+		testCompile group: 'junit', name: 'junit', version: '4.+'
+	}
+}
+
+project(':rti4t-xd-ftp-source') { 
+   dependencies {
+	compile project(':rti4t-xd-domain')
+        compile "org.springframework.xd:spring-xd-module-plugin:1.1.2.RELEASE"
+        compile "org.springframework.xd:spring-xd-tuple:1.1.2.RELEASE"
+        compile "org.springframework.integration:spring-integration-core:4.1.2.RELEASE"
+        compile "org.springframework.integration:spring-integration-file:4.1.2.RELEASE"
+        compile "org.springframework.integration:spring-integration-ftp:4.1.2.RELEASE"
+        compile "org.springframework:spring-messaging:4.1.4.RELEASE"
+        compile "org.springframework.amqp:spring-amqp:1.4.2.RELEASE"
+        compile "org.springframework.amqp:spring-rabbit:1.4.2.RELEASE"
+        compile "com.google.guava:guava:16.0.1"
+        compile 'com.lmax:disruptor:3.2.1'
+
+   }
+}
+
+project(':rti4t-xd-amqp-source') { 
+   dependencies {
+	compile project(':rti4t-xd-domain')
+        compile "org.springframework.xd:spring-xd-module-plugin:1.1.2.RELEASE"
+        compile "org.springframework.xd:spring-xd-tuple:1.1.2.RELEASE"
+        compile "org.springframework.integration:spring-integration-core:4.1.2.RELEASE"
+        compile "org.springframework.integration:spring-integration-file:4.1.2.RELEASE"
+        compile "org.springframework:spring-messaging:4.1.4.RELEASE"
+        compile "org.springframework.amqp:spring-amqp:1.4.2.RELEASE"
+        compile "org.springframework.amqp:spring-rabbit:1.4.2.RELEASE"
+        compile "com.google.guava:guava:16.0.1"
+        compile 'com.lmax:disruptor:3.2.1'
+
+   }
+}
+
+project(':rti4t-xd-sync-tap') {
+   dependencies {
+        compile project(':rti4t-xd-domain')
+        compile "org.springframework.xd:spring-xd-module-plugin:1.1.2.RELEASE"
+        compile "org.springframework.xd:spring-xd-tuple:1.1.2.RELEASE"
+        compile "org.springframework.integration:spring-integration-core:4.1.2.RELEASE"
+        compile "org.springframework:spring-messaging:4.1.4.RELEASE"
+        compile "com.google.guava:guava:16.0.1"
+
+   }
+}
+
+project(':rti4t-xd-kafka-source') {
+   dependencies {
+        compile project(':rti4t-xd-domain')
+        compile "org.springframework.xd:spring-xd-module-plugin:1.1.2.RELEASE"
+        compile "org.springframework.xd:spring-xd-tuple:1.1.2.RELEASE"
+        compile "org.springframework.integration:spring-integration-core:4.1.2.RELEASE"
+        compile "org.springframework.integration:spring-integration-file:4.1.2.RELEASE"
+        compile "org.springframework:spring-messaging:4.1.4.RELEASE"
+        compile "com.google.guava:guava:16.0.1"
+        compile 'com.lmax:disruptor:3.2.1'
+
+   }
+}
+
+project(':rti4t-xd-commons') { 
+   dependencies {
+	compile project(':rti4t-xd-domain')
+        compile "org.springframework.xd:spring-xd-module-plugin:1.1.2.RELEASE"
+		compile "commons-lang:commons-lang:2.6"
+        compile "org.springframework.xd:spring-xd-tuple:1.1.2.RELEASE"
+        compile "org.springframework.integration:spring-integration-core:4.1.2.RELEASE"
+        compile "org.springframework.integration:spring-integration-file:4.1.2.RELEASE"
+        compile "org.springframework:spring-messaging:4.1.4.RELEASE"
+        compile "org.springframework.amqp:spring-amqp:1.4.2.RELEASE"
+        compile "org.springframework.amqp:spring-rabbit:1.4.2.RELEASE"
+        compile "com.google.guava:guava:16.0.1"
+        compile 'com.lmax:disruptor:3.2.1'
+   }
+}
+
+project(':rti4t-xd-payload-handler') { 
+   dependencies {
+	compile project(':rti4t-xd-domain')
+	compile project(':rti4t-xd-commons')
+        compile "org.springframework.xd:spring-xd-module-plugin:1.1.2.RELEASE"
+        compile "org.springframework.xd:spring-xd-tuple:1.1.2.RELEASE"
+        compile "org.springframework.integration:spring-integration-core:4.1.2.RELEASE"
+        compile "org.springframework.integration:spring-integration-file:4.1.2.RELEASE"
+        compile "org.springframework:spring-messaging:4.1.4.RELEASE"
+        compile "org.springframework.amqp:spring-amqp:1.4.2.RELEASE"
+        compile "org.springframework.amqp:spring-rabbit:1.4.2.RELEASE"
+        compile "com.google.guava:guava:16.0.1"
+        compile 'com.lmax:disruptor:3.2.1'
+
+   }
+}
+
+project(':rti4t-xd-shell-processor') {
+   dependencies {
+        compile project(':rti4t-xd-domain')
+        compile project(':rti4t-xd-commons')
+        compile "org.springframework.xd:spring-xd-module-plugin:1.1.2.RELEASE"
+        compile "org.springframework.xd:spring-xd-tuple:1.1.2.RELEASE"
+        compile "org.springframework.integration:spring-integration-core:4.1.2.RELEASE"
+        compile "org.springframework.integration:spring-integration-file:4.1.2.RELEASE"
+        compile "org.springframework:spring-messaging:4.1.4.RELEASE"
+        compile "org.springframework.amqp:spring-amqp:1.4.2.RELEASE"
+        compile "org.springframework.amqp:spring-rabbit:1.4.2.RELEASE"
+        compile "com.google.guava:guava:16.0.1"
+        compile 'com.lmax:disruptor:3.2.1'
+   }
+}
+
+project(':rti4t-xd-job-file') {
+   dependencies {
+        compile project(':rti4t-xd-domain')
+        compile project(':rti4t-xd-commons')
+        compile "org.springframework.xd:spring-xd-module-plugin:1.1.2.RELEASE"
+        compile "org.springframework.xd:spring-xd-tuple:1.1.2.RELEASE"
+        compile "org.springframework.integration:spring-integration-core:4.1.2.RELEASE"
+        compile "org.springframework.integration:spring-integration-file:4.1.2.RELEASE"
+        compile "org.springframework:spring-messaging:4.1.4.RELEASE"
+        compile "org.springframework.amqp:spring-amqp:1.4.2.RELEASE"
+        compile "org.springframework.amqp:spring-rabbit:1.4.2.RELEASE"
+        compile "com.google.guava:guava:16.0.1"
+        compile 'com.lmax:disruptor:3.2.1'
+
+   }
+} 

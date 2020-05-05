@@ -1,0 +1,1 @@
+include ":rti4t-xd-commons", ":rti4t-xd-shell-processor", ":rti4t-xd-job-file", ":rti4t-xd-payload-handler", ":rti4t-xd-file-handler", ":rti4t-xd-mp-batch", ":rti4t-xd-domain", ":rti4t-xd-amqp-source" , ":rti4t-xd-ftp-source", ":rti4t-xd-sync-tap", ":rti4t-xd-kafka-source"

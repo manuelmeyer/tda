@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:hdp="http://www.springframework.org/schema/hadoop"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:batch="http://www.springframework.org/schema/batch"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/hadoop http://www.springframework.org/schema/hadoop/spring-hadoop.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
+		http://www.springframework.org/schema/batch http://www.springframework.org/schema/batch/spring-batch.xsd">
+
+	<batch:job id="job" restartable="false">
+		<batch:step id="checkExists">
+			<batch:tasklet ref="checkFileExistsTask" />
+			<batch:next on="COMPLETED" to="fileStep"/>
+			<batch:end on="FAILED"/>
+		</batch:step>
+		<batch:step id="fileStep">
+			<batch:tasklet>
+				<batch:chunk reader="itemReader" processor="itemProcessor" writer="itemWriter" commit-interval="10000"/>
+				<batch:listeners>
+					<batch:listener ref="fileDeletionListener" />
+				</batch:listeners>
+			</batch:tasklet>
+			<batch:next on="COMPLETED" to="moveFiles"/>
+			<batch:fail on="FAILED" />
+		</batch:step>
+		<batch:step id="moveFiles">
+			<batch:tasklet ref="moveCommandSh" />
+		</batch:step>
+	</batch:job>
+	
+	<bean id="checkFileExistsTask" class="org.springframework.batch.core.step.tasklet.MethodInvokingTaskletAdapter" scope="step">
+		<property name="targetObject">
+			<bean class="com.dell.rti4t.xd.batch.item.file.FileCheck">
+				<property name="path" value="#{jobParameters['absoluteFilePath']}" />
+			</bean>
+		</property>
+		<property name="targetMethod" value="fileExists"/>
+	</bean>
+
+	<bean id="imsiWhiteListFilter" class="com.dell.rti4t.xd.filter.InOrOutListBasedFilterImpl">
+		<property name="inMode" value="true" />
+		<property name="inOrOutFilePath" value="${imsiwhitelistfile:}" />
+		<property name="refresh" value="${refresh:60000}" />
+	</bean>
+	<bean id="imsiBlackListFilter" class="com.dell.rti4t.xd.filter.InOrOutListBasedFilterImpl">
+		<property name="inMode" value="false" />
+		<property name="inOrOutFilePath" value="${imsiblacklistfile:}" />
+		<property name="refresh" value="${refresh:60000}" />
+	</bean>
+	<bean id="imsiLengthFilter" class="com.dell.rti4t.xd.filter.InOrOutPatternBasedFilterImpl">
+		<property name="inMode" value="true" />
+		<property name="maximumLength" value="${imsimaximumlength:9999}" />
+		<property name="discriminationMode" value="HAS_MAXIMUM_LENGTH" />
+	</bean>
+
+	<util:list id="filters" value-type="com.dell.rti4t.xd.filter.EventFilter">
+		<ref bean="imsiLengthFilter" />
+		<ref bean="imsiWhiteListFilter" />
+		<ref bean="imsiBlackListFilter" />
+	</util:list>
+
+	<bean id="itemProcessor" class="com.dell.rti4t.xd.batch.item.file.DataTransporterItemProcessor">
+		<property name="eventFilters" ref="filters" />
+	</bean>
+	
+	<!-- build some usefull env variable that will pass to the shell script -->
+	<util:list id="envFiles" scope="step">
+		<value>FILEIN=#{jobParameters['absoluteFilePath']}</value>
+		<value>DIROUT=${outdirectory}</value>
+		<value>FILEOUT=#{'${outdirectory}' + '/' + new java.io.File(jobParameters['absoluteFilePath']).getName()}.processing</value>
+	</util:list>
+	<bean id="checkExistsSh" class="com.dell.rti4t.xd.batch.item.file.SystemCommandLoggedTasklet" scope="step">
+		<property name="command">
+			<value>
+			<![CDATA[
+			echo Checking file $FILEIN exists
+			if [[ -f $FILEIN ]]
+			then
+				exit 0
+			fi
+			echo $FILEIN does not exist >&2
+			exit 1
+			]]>
+			</value>
+		</property>
+		<property name="environmentParams" ref="envFiles" />
+	</bean>
+	<bean id="moveCommandSh" class="com.dell.rti4t.xd.batch.item.file.SystemCommandLoggedTasklet" scope="step">
+		<property name="command" value="${endprocessscript}" />
+		<property name="environmentParams" ref="envFiles" />
+	</bean>
+	
+	<bean id="fileDeletionListener" class="org.springframework.xd.dirt.plugins.job.support.listener.FileDeletionStepExecutionListener">
+		<property name="deleteFiles" value="false"/>
+	</bean>
+
+	<bean id="itemReader" class="org.springframework.batch.item.file.FlatFileItemReader" scope="step">
+		<property name="resource" value="file:///#{jobParameters['absoluteFilePath']}" />
+		<property name="lineMapper" ref="lineMapper" />
+	</bean>
+
+	<bean id="lineTokenizer" class="com.dell.rti4t.xd.batch.item.file.ListDelimitedLineTokenizer">
+		<property name="delimiter" value="${tokendelimiter:,}" />
+	</bean>
+	<bean id="transporterHandler"
+		class="com.dell.rti4t.xd.transformer.ObjectListToDataTransporterImpl">
+		<property name="fieldNamesDefinitionFile" value="${fieldnamesdefinitionfile}" />
+	</bean>
+	<bean id="lineMapper" class="com.dell.rti4t.xd.batch.item.file.DataTransporterLineMapper">
+			<property name="lineTokenizer" ref="lineTokenizer" />
+			<property name="objectListToDataTransporter" ref="transporterHandler" />
+	</bean>
+	<bean id="pepperManager" class="com.dell.rti4t.xd.transformer.PepperManagerImpl">
+		<property name="pepper" value="${encryptionsalt:}" />
+	</bean>
+	
+	<bean id="mapFieldReducer" class="com.dell.rti4t.xd.transformer.MapFieldReducerImpl">
+		<property name="anonymiseSet" value="${anonymise:}" />
+		<property name="fieldsOutDefinitionFile" value="${fieldsoutdefinitionfile}" />
+		<property name="pepperManager" ref="pepperManager" />
+	</bean>
+
+	<bean id="lineAggregator" class="com.dell.rti4t.xd.batch.item.file.DataTranporterWriterAggregator" >
+		<property name="mapFieldReducer" ref="mapFieldReducer" />
+	</bean>
+	
+	<bean id="itemWriter" class="org.springframework.batch.item.file.FlatFileItemWriter" scope="step">
+		<property name="resource" value="file:#{'${outdirectory}' + '/' + new java.io.File(jobParameters['absoluteFilePath']).getName()}.processing" />
+		<property name="lineAggregator" ref="lineAggregator" />
+	</bean>
+</beans>

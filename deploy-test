@@ -1,0 +1,41 @@
+# delete the test stream and the modules
+echo delete streams/taps and the modules
+for i in streams/*.def
+do
+	echo $i
+	echo curl --request DELETE localhost:9393/streams/definitions/`basename $i .def` 
+	curl --request DELETE localhost:9393/streams/definitions/`basename $i .def` 2>/dev/null | python -m json.tool
+done
+# read k
+# curl --request DELETE localhost:9393/streams/definitions/rabbittesttap 2>/dev/null | python -m json.tool
+# curl --request DELETE localhost:9393/streams/definitions/rabbittest 2>/dev/null | python -m json.tool
+
+curl -X DELETE localhost:9393/modules/sink/rti4tfilehandler 2>/dev/null | python -m json.tool
+curl -X DELETE localhost:9393/modules/processor/rti4tpayloadhandler 2>/dev/null | python -m json.tool
+
+# upload the modules
+echo upload the modules 
+curl --data-binary @rti4t-xd-payload-handler/build/libs/rti4t-xd-payload-handler-0.0.1.jar \
+		--header "Content-Type: application/octet-stream" \
+		--request POST localhost:9393/modules/processor/rti4tpayloadhandler 2>/dev/null | python -m json.tool
+
+# curl localhost:9393/modules/processor/rti4tpayloadhandler 2>/dev/null | python -m json.tool
+
+curl --data-binary @rti4t-xd-file-handler/build/libs/rti4t-xd-file-handler-0.0.1.jar \
+		--header "Content-Type: application/octet-stream" \
+		--request POST localhost:9393/modules/sink/rti4tfilehandler 2>/dev/null | python -m json.tool
+# curl localhost:9393/modules/sink/rti4tfilehandler 2>/dev/null | python -m json.tool
+
+# read k
+# re-create the stream
+echo re-create streams
+for i in streams/*.def
+do
+	curl --data @"$i" \
+		--header "Content-Type: application/x-www-form-urlencoded" \
+		--request POST localhost:9393/streams/definitions 2>/dev/null | python -m json.tool
+done
+# curl --data @streamtap.def \
+		# --header "Content-Type: application/x-www-form-urlencoded" \
+		# --request POST localhost:9393/streams/definitions 2>/dev/null | python -m json.tool
+

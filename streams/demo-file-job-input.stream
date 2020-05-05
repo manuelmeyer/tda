@@ -1,0 +1,1 @@
+definition=file --preventDuplicates=false --ref=true --dir=/temp/demographics/in --pattern=*.dat > queue:job:demo-file
