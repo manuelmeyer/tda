@@ -6,15 +6,12 @@ import static java.lang.String.format;
 import static java.lang.String.valueOf;
 import static java.lang.Thread.currentThread;
 
-import java.io.Serializable;
-import java.util.Map;
-
-import net.openhft.chronicle.map.ChronicleMapBuilder;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 
+import com.dell.rti4t.xd.common.ImsiHistory;
+import com.dell.rti4t.xd.common.ReductionMapHandler;
 import com.dell.rti4t.xd.domain.DataTransporter;
 
 public class DataReductionImpl implements EventFilter, InitializingBean {
@@ -30,89 +27,18 @@ public class DataReductionImpl implements EventFilter, InitializingBean {
 		MARK_IMSIS_CHANGE_CELL
 	}
 	
-	static private long delta = 60;
 	private ReductionMode mode = IMSIS_CHANGE_CELL;
 
 	public void setDeltaTime(int delta) {
-		this.delta = delta;
+		ReductionMapHandler.setExpirationDelta(delta * 1000);
 	}
 	
 	public void setReductionMode(ReductionMode mode) {
 		this.mode = mode;
 		if(mode == IMSIS_CHANGE_CELL_ONLY) {
-			delta = cachExpiration;
+			ReductionMapHandler.setExpirationDelta(cachExpiration);
 		}
 	}
-	
-	@SuppressWarnings("serial")
-	public static class ImsiHistory implements Serializable {
-		public long accessed = 0;
-		public long[] eventTime = new long[2];
-		public long[] lac = new long[2];
-		public long[] cellTower = new long[2];
-		public long lastSeen;
-		
-		public ImsiHistory(long lac, long cellTower, long now) {
-			this.lac[0] = lac;
-			this.cellTower[0] = cellTower;
-			this.eventTime[0] = now;
-			this.eventTime[1] = -1L;
-			this.lastSeen = now;
-		}
-		
-		public void setLastSeen(long now) {
-			if(this.lastSeen < now) {
-				this.lastSeen = now;
-			}
-		}
-		
-		public synchronized boolean isReductable(long lac, long cellTower, long now) {
-			accessed++;
-			
-			boolean isCell0 = (this.lac[0] == lac && this.cellTower[0] == cellTower);
-			boolean isCell1 = (this.lac[1] == lac && this.cellTower[1] == cellTower);
-			
-			if(isCell0 || isCell1) {
-				if(isCell0 && now > (this.eventTime[0] + delta)) {
-					this.eventTime[0] = now;
-					return false;
-				} else if(isCell1 && now > (this.eventTime[1] + delta)) {
-					this.eventTime[1] = now;
-					return false;
-				}
-				return true;
-			}
-			
-			if((this.eventTime[0] > this.eventTime[1]) && (now > this.eventTime[1])) {
-				this.eventTime[1] = now;
-				this.lac[1] = lac;
-				this.cellTower[1] = cellTower;
-				return false;
-			}
-			if((this.eventTime[1] > this.eventTime[0]) && (now > this.eventTime[0])) {
-				this.eventTime[0] = now;
-				this.lac[0] = lac;
-				this.cellTower[0] = cellTower;
-				return false;
-			}
-			return true;
-		}
-
-		public void reset(long lac, long cellTower, long now) {
-			this.lac[0] = lac;
-			this.cellTower[0] = cellTower;
-			this.eventTime[0] = now;
-			this.lac[1] = 0L;
-			this.cellTower[1] = 0L;
-			this.eventTime[1] = 0L;
-		}
-		
-		public boolean isInSameClockMinute(long now) {
-			return  (now - lastSeen) < 60;
-		}
-	};
-
-	private Map<String, ImsiHistory> imsiHistory;
 
 	@Override
 	public boolean accept(DataTransporter dt) {
@@ -149,7 +75,7 @@ public class DataReductionImpl implements EventFilter, InitializingBean {
 
 		long now = (eventTimeUTC - (eventTimeUTC % 1000)) / 1000;
 
-		ImsiHistory history = imsiHistory.get(imsi);
+		ImsiHistory history = ReductionMapHandler.getImsiHistory(imsi);
 		
 		if(history == null) {
 			if(LOG.isDebugEnabled()) {
@@ -159,12 +85,11 @@ public class DataReductionImpl implements EventFilter, InitializingBean {
 				dt.putFieldValue("accessed", "0");
 				dt.putFieldValue("reducted", "OK-FIRSTSEEN");
 			}
-			history = new ImsiHistory(lac, cellTower, now);
-			imsiHistory.put(imsi, history);
+			ReductionMapHandler.newImsiHistory(imsi, lac, cellTower, now);
 			return true;
 		}
 		
-		if(!history.isReductable(lac, cellTower, now)) {
+		if(!ReductionMapHandler.isReductable(history, lac, cellTower, now)) {
 			if(LOG.isDebugEnabled()) {
 				LOG.debug("Change of cell tower, returning true");
 			}
@@ -213,17 +138,10 @@ public class DataReductionImpl implements EventFilter, InitializingBean {
 			LOG.info("NO data reduction in place");
 			return;
 		}
-		LOG.info("Data reduction mode {} based on a change of celltower or a delta of {} seconds", mode.toString(), delta);
-		imsiHistory = ChronicleMapBuilder.of(String.class, ImsiHistory.class)
-				.averageKeySize(15)
-				//.averageValueSize(256)
-				.entries(50 * 1024 * 1024)
-				.create();
-//				(Map<String, ImsiHistory>) CacheBuilder.newBuilder()
-//				.expireAfterAccess(cachExpiration, TimeUnit.SECONDS)
-//				.initialCapacity(500_000)
-//				.build();
-		LOG.info("Chronical map created");
+		LOG.info("Data reduction mode {} based on a change of celltower or a delta of {} seconds", 
+				mode.toString(), 
+				ReductionMapHandler.expirationDelta);
+		ReductionMapHandler.buildMap();
 	}
 
 	@Override

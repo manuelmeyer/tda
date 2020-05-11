@@ -20,6 +20,7 @@ import org.springframework.beans.factory.InitializingBean;
 
 import reactor.util.StringUtils;
 
+import com.dell.rti4t.xd.common.ReductionMapHandler;
 import com.dell.rti4t.xd.domain.DataTransporter;
 import com.dell.rti4t.xd.files.AbstractFileChangeWatchdog;
 import com.dell.rti4t.xd.files.OnFileChange;
@@ -43,16 +44,23 @@ public class LacCellFilterImpl implements EventFilter, InitializingBean {
 	private String lacCellFilePath;
 	private String lacField = "lac";
 	private String cellField = "cellTower";
+	
 	private int frequency;
+	private boolean followExit;
 	
 	public String toString() {
-		return String.format("Filtering on file [%s], filter fields are [%s,%s]",
+		return String.format("Filtering on file [%s], filter fields are [%s,%s] - follow exit '%s'",
 				(StringUtils.isEmpty(lacCellFilePath) ? "<none>" : lacCellFilePath),
-				lacField, cellField);
+				lacField, cellField,
+				followExit);
 	}
 	
 	public Map<String, Set<String>> accessLacCellsStore() {
 		return lacCellsStore;
+	}
+	
+	public void setFollowExit(boolean followExit) {
+		this.followExit = followExit;
 	}
 	
 	public void setRefresh(int frequency) {
@@ -82,7 +90,22 @@ public class LacCellFilterImpl implements EventFilter, InitializingBean {
 			return false;
 		}
 		Set<String> cells = lacCellsStore.get(lac);
-		return cells != null && (cells.isEmpty() || cells.contains(cell));
+		
+		boolean inGeoFence = cells != null && (cells.isEmpty() || cells.contains(cell));
+		
+		String imsi = dt.getFieldValue("imsi");
+
+		if(inGeoFence) {
+			if(followExit) {
+				ReductionMapHandler.isInGeofence(imsi);
+			}
+			return true;
+		} else {
+			if(followExit) {
+				return ReductionMapHandler.isLeavingGeofence(imsi);
+			}
+		}
+		return false;
 	}
 	
 	private boolean checkForbiddenValues(String lac, String cell) {
@@ -98,7 +121,7 @@ public class LacCellFilterImpl implements EventFilter, InitializingBean {
 	public void afterPropertiesSet() throws Exception {
 		if(!isEmpty(lacCellFilePath)) {
 			lacCellsStore = loadLacAndCells();
-			LOG.info("LAC field is '{}', CELL field is '{}'", lacField, cellField);
+			LOG.info("{}", toString());
 			startFileWatchDog();
 		}
 	}

@@ -11,11 +11,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.dell.rti4t.xd.domain.DataTransporter;
 import com.dell.rti4t.xd.filter.DataReductionImpl.ReductionMode;
 
 public class TestDataReduction {
+	
+	static private final Logger LOG = LoggerFactory.getLogger(TestDataReduction.class);
 	
 	@Test
 	public void checkFlowFromEventFile() throws Exception {
@@ -121,25 +125,28 @@ public class TestDataReduction {
 		fields.put("timeUTC", "148110 19 40 000".replaceAll(" ", ""));
 		
 		rc = dataReduction.accept(dt);
+		LOG.info("rc0 {} for {}", rc, fields);
 		
 		fields.put("lac", "307");
 		fields.put("cellTower", "42385");
 		fields.put("timeUTC", "148110 19 55 000".replaceAll(" ", ""));
 		
 		rc = dataReduction.accept(dt);
+		LOG.info("rc1 {} for {}", rc, fields);
 		
 		fields.put("lac", "302");
 		fields.put("cellTower", "61554");
 		fields.put("timeUTC", "148110 19 61 000".replaceAll(" ", ""));
 		
 		rc = dataReduction.accept(dt);
+		LOG.info("rc2 {} for {}", rc, fields);
 		
 		fields.put("lac", "307");
 		fields.put("cellTower", "63620");
 		fields.put("timeUTC", "148110 19 37 000".replaceAll(" ", ""));
 		
 		rc = dataReduction.accept(dt);
-		
+		LOG.info("rc3 {} for {}", rc, fields);		
 	}
 	
 	@Test
