@@ -33,8 +33,8 @@ public class InOrOutListBasedFilterImpl extends InOrOutBaseFilter {
 
 	private String inOrOutFilePath;
 	private Set<String> inOrOutSet;
-	private Set<String> filteredOutSet;
-	private Set<String> acceptedInSet;
+//	private Set<String> filteredOutSet;
+//	private Set<String> acceptedInSet;
 	private int frequency;
 	int totalEntries;
 	
@@ -69,7 +69,7 @@ public class InOrOutListBasedFilterImpl extends InOrOutBaseFilter {
 			return false;
 		}
 		boolean accepted = !(in ^ inOrOutSet.contains(field)); // xnor -> true if both are the same
-		addToFilteredOut(field, accepted ? acceptedInSet : filteredOutSet);
+		//addToFilteredOut(field, accepted ? acceptedInSet : filteredOutSet);
 		return accepted;
 	}
 
@@ -89,9 +89,9 @@ public class InOrOutListBasedFilterImpl extends InOrOutBaseFilter {
 			LOG.info("Filter for {} is {}", inOrOutFilePath, (in == true ? "whitelist" : "blacklist"));
 			inOrOutSet = loadFileInfo();
 			startFileWatchDog();
-			filteredOutSet = createFilteredHashSet();
-			acceptedInSet = createAcceptedHashSet();
-			startFilterOutSetDumper();
+//			filteredOutSet = createFilteredHashSet();
+//			acceptedInSet = createAcceptedHashSet();
+			//startFilterOutSetDumper();
 		}
 	}
 	
@@ -166,46 +166,6 @@ public class InOrOutListBasedFilterImpl extends InOrOutBaseFilter {
 					.averageKeySize(keySize)
 					.entries(totalEntries + 500)
 					.create();
-	}
-
-	private void startFilterOutSetDumper() {
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				NumberFormat integerInstance = NumberFormat.getIntegerInstance();
-				for(;;) {
-					try {
-						Thread.sleep(SLEEP_BETWEEN_STATS);
-						if (inOrOutSet != null) {
-							int totalEntries = inOrOutSet.size();
-							int totalAccepted = acceptedInSet.size();
-							if (totalEntries > 0) {
-								int totalFiltered = filteredOutSet.size();
-								LOG.info("Accepted {} filtered {}", totalAccepted, totalFiltered);
-								double dblPercentFilteredInList = 100.0 * (double)totalFiltered/(double)totalEntries;
-								double percentAccepted = 100.00;
-								if(totalFiltered + totalAccepted > 0) {
-									double dblFiltered = (double)totalFiltered;
-									percentAccepted = 100.0 * dblFiltered/((double)totalAccepted + dblFiltered);
-								}
-								LOG.info(String.format("%s total in list[%s], filtered(in)[%s] (%.2f%% of list), total(in)[%s], p(filtered/total) %.2f%% out (%.2f%% ok)", 
-										(in ? "[white list]" : "[black list]"),
-										integerInstance.format(totalEntries),
-										integerInstance.format(totalFiltered), 
-										dblPercentFilteredInList, 
-										integerInstance.format(totalFiltered + totalAccepted),
-										percentAccepted,
-										100.00 - percentAccepted
-										));
-								
-							}
-						}
-					} catch (Exception e) {
-						LOG.info("Getting exception, waiting before generating stats");
-					}
-				}
-			}
-		}).start();
 	}
 
 	private void startFileWatchDog() {

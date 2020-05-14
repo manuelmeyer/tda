@@ -48,6 +48,7 @@
 		<property name="lacField" value="${lacfield:}" />
 		<property name="cellField" value="${cellfield:}" />
 		<property name="refresh" value="${refresh:60}" />
+		<property name="followExit" value="${followexit}" />
 	</bean>
 	<bean id="dataReductorFilter" class="com.dell.rti4t.xd.filter.DataReductionImpl">
 		<property name="reductionMode" value="${reductionmode:NONE}"/>

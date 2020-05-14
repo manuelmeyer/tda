@@ -81,13 +81,18 @@ public class TestLacAndCellFilter {
 		DataTransporter dt = new DataTransporter(fields, "unused");
 		fields.put("imsi", "123456789012345");
 		
-		fields.put("lac", "66");
-		fields.put("cellTower", "66");
-		Assert.assertFalse(lacCellFfilter.accept(dt));
-		LOG.info("dt0 {}", dt);
+//		fields.put("lac", "66");
+//		fields.put("cellTower", "66");
+//		fields.remove("lastLac");
+//		fields.remove("lastCellTower");
+//
+//		Assert.assertFalse(lacCellFfilter.accept(dt));
+//		LOG.info("dt0 {}", dt);
 		
 		fields.put("lac", "10");
 		fields.put("cellTower", "1");
+		fields.remove("lastLac");
+		fields.remove("lastCellTower");
 		fields.put("timeUTC", "10000 00 61 000".replaceAll(" ", ""));
 		
 		Assert.assertTrue(lacCellFfilter.accept(dt));
@@ -96,6 +101,8 @@ public class TestLacAndCellFilter {
 
 		fields.put("lac", "12");
 		fields.put("cellTower", "5");
+		fields.remove("lastLac");
+		fields.remove("lastCellTower");
 		fields.put("timeUTC", "10000 00 62 000".replaceAll(" ", ""));
 		
 		Assert.assertTrue(lacCellFfilter.accept(dt));
@@ -109,6 +116,8 @@ public class TestLacAndCellFilter {
 		
 		fields.put("lac", "99");
 		fields.put("cellTower", "99");
+		fields.remove("lastLac");
+		fields.remove("lastCellTower");
 		fields.put("timeUTC", "10000 00 64 000".replaceAll(" ", ""));
 
 		Assert.assertTrue(lacCellFfilter.accept(dt));
@@ -117,7 +126,19 @@ public class TestLacAndCellFilter {
 
 		fields.put("lac", "999");
 		fields.put("cellTower", "999");
+		fields.remove("lastLac");
+		fields.remove("lastCellTower");
 		fields.put("timeUTC", "10000 00 65 000".replaceAll(" ", ""));
 		Assert.assertFalse(lacCellFfilter.accept(dt));
+		
+		fields.put("lac", "10");
+		fields.put("cellTower", "1");
+		fields.remove("lastLac");
+		fields.remove("lastCellTower");
+		fields.put("timeUTC", "10000 00 66 000".replaceAll(" ", ""));
+		
+		Assert.assertTrue(lacCellFfilter.accept(dt));
+		Assert.assertTrue(dataReduction.accept(dt));
+		LOG.info("dt4 {}", dt);
 	}
 }

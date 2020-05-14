@@ -1,7 +1,6 @@
 package com.dell.rti4t.xd.filter;
 
 import static com.dell.rti4t.xd.filter.DataReductionImpl.ReductionMode.IMSIS_CHANGE_CELL;
-import static com.dell.rti4t.xd.filter.DataReductionImpl.ReductionMode.IMSIS_CHANGE_CELL_ONLY;
 import static java.lang.String.format;
 import static java.lang.String.valueOf;
 import static java.lang.Thread.currentThread;
@@ -16,7 +15,7 @@ import com.dell.rti4t.xd.domain.DataTransporter;
 
 public class DataReductionImpl implements EventFilter, InitializingBean {
 	
-	static private final int cachExpiration = 2 * 3600 + 1; // 2h 1mn
+	private int delayBeforeDuplicate = -1; // 8 * 60 + 1; // 2h 1mn
 	
 	private static final Logger LOG = LoggerFactory.getLogger(DataReductionImpl.class);
 	
@@ -29,15 +28,14 @@ public class DataReductionImpl implements EventFilter, InitializingBean {
 	
 	private ReductionMode mode = IMSIS_CHANGE_CELL;
 
-	public void setDeltaTime(int delta) {
-		ReductionMapHandler.setExpirationDelta(delta * 1000);
+	public void setDelayBeforeDuplicate(int delay) {
+		LOG.info("Setting delay before duplicating on the same cell {}", delay);
+		delayBeforeDuplicate = delay;
+		ReductionMapHandler.setDelayBeforeDuplicate(delay);
 	}
 	
 	public void setReductionMode(ReductionMode mode) {
 		this.mode = mode;
-		if(mode == IMSIS_CHANGE_CELL_ONLY) {
-			ReductionMapHandler.setExpirationDelta(cachExpiration);
-		}
 	}
 
 	@Override
@@ -97,14 +95,9 @@ public class DataReductionImpl implements EventFilter, InitializingBean {
 				dt.putFieldValue("accessed", valueOf(history.accessed));
 				dt.putFieldValue("reducted", format("OK-LACCELLCHANGE-%s", currentThread().getName()));
 			} else if(mode == ReductionMode.IMSIS_CHANGE_CELL_ONLY) {
-				if(history.eventTime[0] > history.eventTime[1]) {
-					dt.putFieldValue("lastLac", valueOf(history.lac[1]));
-					dt.putFieldValue("lastCellTower", valueOf(history.cellTower[1]));
-					dt.putFieldValue("lastSeen", Long.toString(history.eventTime[1]));
-				} else {
-					dt.putFieldValue("lastLac", valueOf(history.lac[0]));
-					dt.putFieldValue("lastCellTower", valueOf(history.cellTower[0]));
-					dt.putFieldValue("lastSeen", Long.toString(history.eventTime[0]));
+				if(history.lastLac > 0 && history.lastCellTower > 0) {
+					dt.putFieldValue("lastLac", valueOf(history.lastLac));
+					dt.putFieldValue("lastCellTower", valueOf(history.lastCellTower));
 				}
 			}
 			return true;
@@ -138,9 +131,22 @@ public class DataReductionImpl implements EventFilter, InitializingBean {
 			LOG.info("NO data reduction in place");
 			return;
 		}
+		
+		if(delayBeforeDuplicate == -1) {
+			switch(mode) {
+				case IMSIS_CHANGE_CELL_ONLY :
+					setDelayBeforeDuplicate(8 * 3600); // 8h on the same cell before duplicating
+					break;
+				default:
+					setDelayBeforeDuplicate(60); // 1mn before duplicating in other mode
+					break;
+			}
+		}
+		
 		LOG.info("Data reduction mode {} based on a change of celltower or a delta of {} seconds", 
-				mode.toString(), 
-				ReductionMapHandler.expirationDelta);
+				mode, 
+				ReductionMapHandler.delayBeforeDuplicate);
+
 		ReductionMapHandler.buildMap();
 	}
 

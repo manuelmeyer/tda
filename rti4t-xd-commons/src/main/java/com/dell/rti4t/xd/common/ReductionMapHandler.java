@@ -12,15 +12,16 @@ public class ReductionMapHandler {
 	
 	static private Logger LOG = LoggerFactory.getLogger(ReductionMapHandler.class);
 	
-	static public long expirationDelta = 60_000;
+	// we resend events for the same <lac, cell> after delayBeforeDuplicate on the same cell
+	static public long delayBeforeDuplicate = 60;
 	static private int initialCapacity = 500_000;
 	static private long expireAfterInSec = 7201L;
 	static private int concurrencyLevel = 32;
 	
 	static private Cache<String, ImsiHistory> ismiHistoryMap = emptyCache();
 	
-	static public void setExpirationDelta(int delta) {
-		ReductionMapHandler.expirationDelta = delta;
+	static public void setDelayBeforeDuplicate(int delta) {
+		ReductionMapHandler.delayBeforeDuplicate = delta;
 	}
 	
 	private static Cache<String, ImsiHistory> emptyCache() {
@@ -32,6 +33,7 @@ public class ReductionMapHandler {
 	}
 	
 	public static void buildMap() {
+		LOG.info("Cache before building is {}", ismiHistoryMap);
 		ismiHistoryMap = CacheBuilder.newBuilder()
 				.initialCapacity(initialCapacity)
 				.expireAfterAccess(expireAfterInSec, TimeUnit.SECONDS)
@@ -50,15 +52,15 @@ public class ReductionMapHandler {
 	public static void isInGeofence(String imsi) {
 		ImsiHistory imsiHistory = ismiHistoryMap.getIfPresent(imsi);
 		if (imsiHistory != null) {
-			imsiHistory.inGeoFence = true;
+			imsiHistory.isGeoFence(true);
 		}
 	}
 
 	public static boolean isLeavingGeofence(String imsi) {
 		ImsiHistory imsiHistory = ismiHistoryMap.getIfPresent(imsi);
 		if (imsiHistory != null) {
-			if(imsiHistory.inGeoFence) {
-				imsiHistory.inGeoFence = false;
+			if(imsiHistory.inGeoFence()) {
+				imsiHistory.isGeoFence(false);
 				return true;
 			}
 		}
@@ -66,7 +68,9 @@ public class ReductionMapHandler {
 	}
 
 	public static void newImsiHistory(String imsi, long lac, long cellTower, long now) {
-		ismiHistoryMap.put(imsi, new ImsiHistory(lac, cellTower, now));
+		ImsiHistory newEntry = new ImsiHistory(lac, cellTower, now);
+		newEntry.isGeoFence(true);
+		ismiHistoryMap.put(imsi, newEntry);
 	}
 
 	public static boolean isReductable(ImsiHistory history, long lac, long cellTower, long now) {

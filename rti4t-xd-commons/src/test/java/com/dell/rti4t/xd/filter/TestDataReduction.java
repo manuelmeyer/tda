@@ -14,6 +14,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.dell.rti4t.xd.common.ImsiHistory;
+import com.dell.rti4t.xd.common.ReductionMapHandler;
 import com.dell.rti4t.xd.domain.DataTransporter;
 import com.dell.rti4t.xd.filter.DataReductionImpl.ReductionMode;
 
@@ -225,8 +227,11 @@ public class TestDataReduction {
 		fields.put("lac", "11");
 		fields.put("cellTower", "11");
 		assertTrue(dataReduction.accept(dt));
-		assertEquals(fields.get("lastLac"), "10");
-		assertEquals(fields.get("lastCellTower"), "10");
-		assertEquals(fields.get("lastSeen"), "100000000"); // we store in seconds
+		
+		ImsiHistory imsiHistory = ReductionMapHandler.getImsiHistory("imsi");
+		LOG.info("Imsi history {}", imsiHistory);
+		assertEquals(imsiHistory.lac[0], 10);
+		assertEquals(imsiHistory.cellTower[0], 10);
+		assertEquals(imsiHistory.lastSeen, 100000000); // we store in seconds
 	}
 }
