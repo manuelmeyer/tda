@@ -29,7 +29,7 @@ public class DataReductionImpl implements EventFilter, InitializingBean {
 	private ReductionMode mode = IMSIS_CHANGE_CELL;
 
 	public void setDelayBeforeDuplicate(int delay) {
-		LOG.info("Setting delay before duplicating on the same cell {}", delay);
+		LOG.info("Setting delay before duplicating on the same cell to {} sec", delay);
 		delayBeforeDuplicate = delay;
 		ReductionMapHandler.setDelayBeforeDuplicate(delay);
 	}
@@ -95,9 +95,10 @@ public class DataReductionImpl implements EventFilter, InitializingBean {
 				dt.putFieldValue("accessed", valueOf(history.accessed));
 				dt.putFieldValue("reducted", format("OK-LACCELLCHANGE-%s", currentThread().getName()));
 			} else if(mode == ReductionMode.IMSIS_CHANGE_CELL_ONLY) {
-				if(history.lastLac > 0 && history.lastCellTower > 0) {
-					dt.putFieldValue("lastLac", valueOf(history.lastLac));
-					dt.putFieldValue("lastCellTower", valueOf(history.lastCellTower));
+				if(history.previousLac > 0 && history.previousCellTower > 0) {
+					dt.putFieldValue("previousLac", valueOf(history.previousLac));
+					dt.putFieldValue("previousCellTower", valueOf(history.previousCellTower));
+					dt.putFieldValue("previousTimeUTC", valueOf(history.previousTimeUTC) + "000");
 				}
 			}
 			return true;

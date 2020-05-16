@@ -203,6 +203,19 @@ public class TestDataReduction {
 		
 		fields.put("timeUTC", "10000 00 61 000".replaceAll(" ", ""));
 		assertFalse(dataReduction.accept(dt));
+		
+		// more than 8h after it was last seen on this cell tower event is visible
+		long timeUTC = 100000000000L + (8 * 3600 * 1000) + 1000; 
+		fields.put("timeUTC", String.valueOf(timeUTC));
+		assertTrue(dataReduction.accept(dt));
+		
+		timeUTC += 2000; // then quiet again
+		fields.put("timeUTC", String.valueOf(timeUTC));
+		assertFalse(dataReduction.accept(dt));
+		
+		timeUTC += (8 * 3600 * 1000); // then visible after 8h
+		fields.put("timeUTC", String.valueOf(timeUTC));
+		assertTrue(dataReduction.accept(dt));
 	}
 	
 	@Test
@@ -232,6 +245,5 @@ public class TestDataReduction {
 		LOG.info("Imsi history {}", imsiHistory);
 		assertEquals(imsiHistory.lac[0], 10);
 		assertEquals(imsiHistory.cellTower[0], 10);
-		assertEquals(imsiHistory.lastSeen, 100000000); // we store in seconds
 	}
 }

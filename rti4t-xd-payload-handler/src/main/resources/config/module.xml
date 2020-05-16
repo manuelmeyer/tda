@@ -52,7 +52,12 @@
 	</bean>
 	<bean id="dataReductorFilter" class="com.dell.rti4t.xd.filter.DataReductionImpl">
 		<property name="reductionMode" value="${reductionmode:NONE}"/>
+		<!-- 
 		<property name="deltaTime" value="${reductiondeltatime:60}" />
+		-->
+	</bean>
+	
+	<bean id="lacCellReductorFilter" class="com.dell.rti4t.xd.filter.LacCellReductionFilterImpl">
 	</bean>
 		
 	<bean id="roamer23425Filter" class="com.dell.rti4t.xd.filter.InOrOutPatternBasedFilterImpl">
