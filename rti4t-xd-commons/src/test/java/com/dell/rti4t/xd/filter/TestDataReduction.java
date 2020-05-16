@@ -243,7 +243,9 @@ public class TestDataReduction {
 		
 		ImsiHistory imsiHistory = ReductionMapHandler.getImsiHistory("imsi");
 		LOG.info("Imsi history {}", imsiHistory);
-		assertEquals(imsiHistory.lac[0], 10);
-		assertEquals(imsiHistory.cellTower[0], 10);
+		assertEquals(imsiHistory.lac, 11);
+		assertEquals(imsiHistory.cellTower, 11);
+		assertEquals(imsiHistory.previousLac, 10);
+		assertEquals(imsiHistory.previousCellTower, 10);
 	}
 }

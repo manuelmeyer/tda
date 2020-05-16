@@ -37,7 +37,7 @@ public class ReductionMapHandler {
 		ismiHistoryMap = CacheBuilder.newBuilder()
 				.initialCapacity(initialCapacity)
 				.expireAfterAccess(expireAfterInSec, TimeUnit.SECONDS)
-				.concurrencyLevel(concurrencyLevel)
+				//.concurrencyLevel(concurrencyLevel)
 				.build();
 		LOG.info("Creating a cache of initial capacity {}, concurrency level {}, expire after {} sec(s)", 
 									initialCapacity,

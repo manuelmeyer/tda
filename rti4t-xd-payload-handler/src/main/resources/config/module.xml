@@ -58,6 +58,8 @@
 	</bean>
 	
 	<bean id="lacCellReductorFilter" class="com.dell.rti4t.xd.filter.LacCellReductionFilterImpl">
+		<property name="lacCellFilter" ref="lacCellFilter"/>
+		<property name="dataReductionFilter" ref="dataReductorFilter"/>
 	</bean>
 		
 	<bean id="roamer23425Filter" class="com.dell.rti4t.xd.filter.InOrOutPatternBasedFilterImpl">
@@ -108,8 +110,7 @@
 		<ref bean="imsiWhiteListFilter" />
 		<ref bean="imsiBlackListFilter" />
 		<ref bean="fraudDetectionFilter" />
-		<ref bean="lacCellFilter" />
-		<ref bean="dataReductorFilter" />
+		<ref bean="lacCellReductorFilter" />
 	</util:list>
 
 	<bean id="ieParser" class="com.dell.rti4t.xd.transformer.IEParserImpl" />
