@@ -159,7 +159,7 @@ html, body, #map-canvas {
 	var files = []
 	var markers = []
 	var radii80 = 990000
-	var celltype = "All"
+	var celltype = "all"
 
 	function handleCellSelect(evt) {
 		var cellfile = evt.target.files[0];
@@ -177,22 +177,36 @@ html, body, #map-canvas {
 				try {
 					var cellLatLng = new google.maps.LatLng(parseFloat(infos[11]), parseFloat(infos[12]));
 					//console.log("Creating marker");
-					var marker = new google.maps.Marker({
-							//opacity: 0.1,
-					    position: cellLatLng,
-							//opacity: 0.2,
-							//scale:10,
-							//icon: {
-		 					//	path: google.maps.SymbolPath.CIRCLE,
-		 					//	scale: 1
-	 						//},
-					    //map: map,
-					    //animation: google.maps.Animation.DROP,
-					    //icon: 'tower.png',
-					    title: "id:" + infos[0] + ":lac:" + infos[10] + ":name:" + infos[1],
+					marker = new google.maps.Circle({
+            strokeColor: getColor(infos[13]), //'#00DD00',
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+            fillColor: getColor(infos[13]), // '#00DD00',
+            fillOpacity: 0.35,
 						radii80 : parseInt(infos[14]),
-						celltype : infos[13]
-					});
+						celltype : infos[13],
+						title: "id:" + infos[0] + ":lac:" + infos[10] + ":name:" + infos[1],
+            //map: map,
+            center: cellLatLng, //citymap[city].center,
+            radius: parseInt(infos[14])/10//10 //Math.sqrt(citymap[city].population) * 100
+          });
+
+					// var marker = new google.maps.Marker({
+					// 		//opacity: 0.1,
+					//     position: cellLatLng,
+					// 		//opacity: 0.2,
+					// 		//scale:10,
+					// 		//icon: {
+		 			// 		//	path: google.maps.SymbolPath.CIRCLE,
+		 			// 		//	scale: 1
+	 				// 		//},
+					//     //map: map,
+					//     //animation: google.maps.Animation.DROP,
+					//     //icon: 'tower.png',
+					//     title: "id:" + infos[0] + ":lac:" + infos[10] + ":name:" + infos[1],
+					// 	radii80 : parseInt(infos[14]),
+					// 	celltype : infos[13]
+					// });
 					markers.push(marker);
 				} catch(e) {
 					console.log(infos + ": ignored " + e);
@@ -202,13 +216,28 @@ html, body, #map-canvas {
 		}
 	}
 
+	function getColor(cellType) {
+		//console.log("type is " + cellType);
+		if (typeof cellType !== 'undefined') {
+		switch(cellType) {
+			case "2G" :
+				return '#BB1144';
+			case "3G":
+				return '#11BB44';
+			default:
+				return '#1144BB'
+			}
+		}
+		return '#000000'
+	}
+
 	function showValidCells() {
 		//console.log("validating " + markers)
 		var totalin = 0
 		var totalout = 0
 		markers.forEach(function show(c) {
 			//console.log("c.radii80 = " + c.radii80 + ", radii80=" + radii80 + ",c.celltype=" + c.celltype + ",celltype=" + celltype);
-			if(c.radii80 <= radii80 && (celltype == "All" ? true : c.celltype == celltype)) {
+			if(c.radii80 <= radii80 && (celltype == "all" ? true : c.celltype == celltype)) {
 				//console.log("Setting map");
 				c.setMap(map);
 				totalin++;
@@ -222,8 +251,8 @@ html, body, #map-canvas {
 		if(totalin > 0 || totalout > 0) {
 			alert("Total cells " + formatNumber(markers.length, 0) + " - Total in selection " + formatNumber(totalin, 0) + " to be displayed");
 		}
-		var markerCluster = new MarkerClusterer(map, markers,
-			{imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'});
+		// var markerCluster = new MarkerClusterer(map, markers,
+		// 	{imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'});
 
 	}
 
@@ -337,7 +366,7 @@ html, body, #map-canvas {
 				</select>
 				Cell type :
 				<select id="celltype">
-					<option value="all" selected>All</option>
+					<option value="all" selected>all</option>
 					<option value="4G">4G</option>
 					<option value="3G">3G</option>
 					<option value="3G-FEMTO">3G-FEMTO</option>
