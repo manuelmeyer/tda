@@ -163,7 +163,7 @@ public class LacCellFilterImpl implements EventFilter, InitializingBean {
 		if(lacCells.length != 2) {
 			return;
 		}
-		String lac = lacCells[0];
+		String lac = lacCells[0].trim();
 		if(isNumeric(lac)) {
 			String allCells = lacCells[1];
 			Set<String> cellsSet = lacCellsStore.get(lac);
@@ -173,6 +173,7 @@ public class LacCellFilterImpl implements EventFilter, InitializingBean {
 			}
 			String[] cells = allCells.split(CELL_SEPARATOR);
 			for(String cell : cells) {
+				cell = cell.trim();
 				if("*".equals(cell)) {
 					cellsSet.clear();
 				} else if(isNumeric(cell)) {
