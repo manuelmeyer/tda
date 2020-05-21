@@ -1,23 +1,26 @@
-package com.dell.rti4t.xd.process.eventhandler;
+package com.dell.rti4t.xd.eventhandler;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.annotation.PostConstruct;
+import javax.management.MBeanServer;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.Lifecycle;
 import org.springframework.messaging.MessageChannel;
 
 import com.dell.rti4t.xd.enrich.EventEnricher;
-import com.dell.rti4t.xd.eventhandler.DataTransporterEventHandler;
-import com.dell.rti4t.xd.eventhandler.DataTransporterEventHandlerFactory;
 import com.dell.rti4t.xd.filter.EventFilter;
+import com.dell.rti4t.xd.jmx.VFROInputOutputMetrics;
 import com.dell.rti4t.xd.transformer.MapFieldReducer;
 import com.dell.rti4t.xd.transformer.ObjectListToDataTransporter;
 
 abstract public class AbstractEventHandlerFactory implements DataTransporterEventHandlerFactory {
-
+	
 	final protected Logger LOG = LoggerFactory.getLogger(getClass());
 	
 	protected boolean isRunning = false;
@@ -29,6 +32,32 @@ abstract public class AbstractEventHandlerFactory implements DataTransporterEven
 	protected int batchTimeout = 5000;
 	protected ObjectListToDataTransporter transformer;
 	protected MapFieldReducer reducer;
+	protected String streamName;
+	private VFROInputOutputMetrics inputOutputMetrics;
+	private String configuredHandlerFactoryId;
+	private String handlerFactoryId;
+	
+    @PostConstruct
+    public void createMetrics() {
+    	inputOutputMetrics = new VFROInputOutputMetrics(streamName, "payload", this);
+    }
+
+    public void setConfiguredHandlerFactoryId(String configuredHandlerFactoryId) {
+    	this.configuredHandlerFactoryId = configuredHandlerFactoryId;
+	}
+
+    public void setHandlerFactoryId(String handlerFactoryId) {
+    	this.handlerFactoryId = handlerFactoryId;
+	}
+
+    public boolean registerBean() {
+    	return handlerFactoryId != null && handlerFactoryId.equals(configuredHandlerFactoryId);
+    }
+	
+	public void setStreamName(String streamName) {
+		LOG.info("Stream name is {}", streamName);
+		this.streamName = streamName;
+	}
 
 	public void setDataTransporterHandler(ObjectListToDataTransporter transformer) {
 		this.transformer = transformer;
@@ -98,7 +127,6 @@ abstract public class AbstractEventHandlerFactory implements DataTransporterEven
 
 	@Override
 	public boolean isRunning() {
-		//LOG.info("Querying lifecyle status - isRunning is {}", isRunning);
 		return isRunning;
 	}
 
@@ -106,8 +134,16 @@ abstract public class AbstractEventHandlerFactory implements DataTransporterEven
 		this.reducer = reducer;
 	}
 	
-	abstract protected DataTransporterEventHandler createNewEventHandler(String handlerName, Lifecycle lifeCycle, MessageChannel outputChannel, int batchSize, int batchTimeout, MapFieldReducer reducer, ObjectListToDataTransporter transformer, 
-						List<EventFilter> eventFilters, List<EventEnricher> enrichers);
+	abstract protected DataTransporterEventHandler createNewEventHandler(String handlerName, 
+			VFROInputOutputMetrics inputOutputMetrics, 
+			Lifecycle lifeCycle, 
+			MessageChannel outputChannel, 
+			int batchSize, 
+			int batchTimeout, 
+			MapFieldReducer reducer, 
+			ObjectListToDataTransporter transformer, 
+			List<EventFilter> eventFilters, 
+			List<EventEnricher> enrichers);
 
 	@Override
 	public DataTransporterEventHandler getEventHandler(String handlerName, MessageChannel outputChannel) {
@@ -116,11 +152,24 @@ abstract public class AbstractEventHandlerFactory implements DataTransporterEven
 			synchronized(producerMap) {
 				eventHandler = producerMap.get(handlerName);
 				if(eventHandler == null) {
-					eventHandler = createNewEventHandler(handlerName, this, outputChannel, batchSize, batchTimeout, reducer, transformer, eventFilters, eventEnrichers);
+					eventHandler = createNewEventHandler(handlerName,
+							inputOutputMetrics,
+							this, 
+							outputChannel, 
+							batchSize, 
+							batchTimeout, 
+							reducer, 
+							transformer, 
+							eventFilters, 
+							eventEnrichers);
 					producerMap.put(handlerName, eventHandler);
 				}
 			}
 		}
 		return eventHandler;
+	}
+
+	public VFROInputOutputMetrics getVFROMetrics() {
+		return inputOutputMetrics;
 	}
 }

@@ -15,6 +15,7 @@ import com.dell.rti4t.xd.domain.DataTransporter;
 import com.dell.rti4t.xd.enrich.EventEnricher;
 import com.dell.rti4t.xd.eventhandler.AbstractDataTransporterEventHandler;
 import com.dell.rti4t.xd.filter.EventFilter;
+import com.dell.rti4t.xd.jmx.VFROInputOutputMetrics;
 import com.dell.rti4t.xd.transformer.MapFieldReducer;
 import com.dell.rti4t.xd.transformer.ObjectListToDataTransporter;
 
@@ -34,8 +35,8 @@ public class AccumulatorEventHandler extends AbstractDataTransporterEventHandler
 	final String filter;
 	Map<String, Context> contextMap = new HashMap<String, Context>();
 
-	public AccumulatorEventHandler(String handlerName, Lifecycle lifeCycle, MessageChannel outputChannel, int batchSize, int batchTimeout, MapFieldReducer reducer, ObjectListToDataTransporter transformer, List<EventFilter> eventFilters, List<EventEnricher> eventEnrichers) {
-		super(handlerName, lifeCycle, outputChannel, batchSize, batchTimeout, reducer, transformer, eventFilters, eventEnrichers);
+	public AccumulatorEventHandler(String handlerName, VFROInputOutputMetrics inputOutputMetrics, Lifecycle lifeCycle, MessageChannel outputChannel, int batchSize, int batchTimeout, MapFieldReducer reducer, ObjectListToDataTransporter transformer, List<EventFilter> eventFilters, List<EventEnricher> eventEnrichers) {
+		super(handlerName, inputOutputMetrics, lifeCycle, outputChannel, batchSize, batchTimeout, reducer, transformer, eventFilters, eventEnrichers);
 		this.filter = (String)handlerName;
 	}
 

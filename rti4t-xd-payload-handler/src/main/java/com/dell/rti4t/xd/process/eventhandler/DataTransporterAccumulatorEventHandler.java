@@ -9,13 +9,14 @@ import org.springframework.messaging.MessageChannel;
 import com.dell.rti4t.xd.domain.DataTransporter;
 import com.dell.rti4t.xd.enrich.EventEnricher;
 import com.dell.rti4t.xd.filter.EventFilter;
+import com.dell.rti4t.xd.jmx.VFROInputOutputMetrics;
 import com.dell.rti4t.xd.transformer.MapFieldReducer;
 import com.dell.rti4t.xd.transformer.ObjectListToDataTransporter;
 
 public class DataTransporterAccumulatorEventHandler extends AccumulatorEventHandler {
 
-	public DataTransporterAccumulatorEventHandler(String handlerName, Lifecycle lifeCycle, MessageChannel outputChannel, int batchSize, int batchTimeout, MapFieldReducer reducer, ObjectListToDataTransporter transformer, List<EventFilter> eventFilters, List<EventEnricher> eventEnrichers) {
-		super(handlerName, lifeCycle, outputChannel, batchSize, batchTimeout, reducer, transformer, eventFilters, eventEnrichers);
+	public DataTransporterAccumulatorEventHandler(String handlerName, VFROInputOutputMetrics inputOutputMetrics, Lifecycle lifeCycle, MessageChannel outputChannel, int batchSize, int batchTimeout, MapFieldReducer reducer, ObjectListToDataTransporter transformer, List<EventFilter> eventFilters, List<EventEnricher> eventEnrichers) {
+		super(handlerName, inputOutputMetrics, lifeCycle, outputChannel, batchSize, batchTimeout, reducer, transformer, eventFilters, eventEnrichers);
 	}
 	
 	@SuppressWarnings("unchecked")

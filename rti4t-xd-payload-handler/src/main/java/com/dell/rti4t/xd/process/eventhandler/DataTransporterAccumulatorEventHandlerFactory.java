@@ -6,8 +6,10 @@ import org.springframework.context.Lifecycle;
 import org.springframework.messaging.MessageChannel;
 
 import com.dell.rti4t.xd.enrich.EventEnricher;
+import com.dell.rti4t.xd.eventhandler.AbstractEventHandlerFactory;
 import com.dell.rti4t.xd.eventhandler.DataTransporterEventHandler;
 import com.dell.rti4t.xd.filter.EventFilter;
+import com.dell.rti4t.xd.jmx.VFROInputOutputMetrics;
 import com.dell.rti4t.xd.transformer.MapFieldReducer;
 import com.dell.rti4t.xd.transformer.ObjectListToDataTransporter;
 
@@ -15,6 +17,7 @@ public class DataTransporterAccumulatorEventHandlerFactory extends AbstractEvent
 	
 	@Override
 	protected DataTransporterEventHandler createNewEventHandler(String handlerName, 
+									VFROInputOutputMetrics inputOutputMetrics,
 									Lifecycle lifeCycle, 
 									MessageChannel outputChannel, 
 									int batchSize, 
@@ -24,7 +27,16 @@ public class DataTransporterAccumulatorEventHandlerFactory extends AbstractEvent
 									List<EventFilter> eventFilters, 
 									List<EventEnricher> enrichers) {
 		LOG.debug("Creating new AccumulatorEventHandler for {}", handlerName);
-		DataTransporterAccumulatorEventHandler accEventHandler = new DataTransporterAccumulatorEventHandler(handlerName, this, outputChannel, batchSize, batchTimeout, reducer, transformer, eventFilters, enrichers);
+		DataTransporterAccumulatorEventHandler accEventHandler = new DataTransporterAccumulatorEventHandler(handlerName, 
+				inputOutputMetrics, 
+				this, 
+				outputChannel, 
+				batchSize, 
+				batchTimeout, 
+				reducer, 
+				transformer, 
+				eventFilters, 
+				enrichers);
 		return accEventHandler;
 	}
 }

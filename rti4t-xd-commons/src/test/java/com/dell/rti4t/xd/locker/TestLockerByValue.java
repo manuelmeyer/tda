@@ -30,6 +30,8 @@ public class TestLockerByValue {
 	long thread2Time = 0;
 	long thread3Time = 0;
 	
+	LockerByValue lockerByValue = LockerByValue.buildLocker("test");
+	
 	@Test
 	public void canLockByValue() throws Exception {
 		new Thread(new T1()).start();
@@ -77,11 +79,32 @@ public class TestLockerByValue {
 		assertTrue(msPerCall <= 0.5); // a bit random...
 	}
 	
+	@Test
+	public void canEntriesBeRemoved() throws Exception {
+		lockerByValue.clear();
+		assertEquals(0, lockerByValue.size());
+		Object lockA = lockerByValue.lock("a");
+		Object lockB = lockerByValue.lock("b");
+		assertEquals(2, lockerByValue.size());
+		
+		System.gc();
+		assertEquals(2, lockerByValue.size());
+		
+		lockA = null;
+		
+		for(int index = 0; index < 10; index++) {
+			System.gc();
+			Thread.sleep(2000);
+			LOG.info("Map size is {}, value['a']={}", lockerByValue.size(), lockerByValue.get("a"));
+			//assertEquals(1, LockerByValue.lockMap.size());
+		}
+	}
+	
 	long fwith() throws Exception {
 		LOG.info("starting with");
 		Stopwatch stopWatch = Stopwatch.createStarted();
 		for(int index = 0; index < totalLoop; index++) {
-			synchronized(LockerByValue.lock("2222" + index)) {
+			synchronized(lockerByValue.lock("2222" + index)) {
 				Thread.sleep(totalSleep);
 			}
 		}
@@ -103,7 +126,7 @@ public class TestLockerByValue {
 	public void thread1() {
 		Stopwatch stopWatch = Stopwatch.createStarted();
 		LOG.info("1 - Waiting to get in");
-		synchronized(LockerByValue.lock("1234")) {
+		synchronized(lockerByValue.lock("1234")) {
 			LOG.info("1 - In the thread");
 			try { Thread.sleep(500); } catch(Exception e) {}
 			LOG.info("1 - Leaving the thread");
@@ -115,7 +138,7 @@ public class TestLockerByValue {
 	public void thread2() {
 		Stopwatch stopWatch = Stopwatch.createStarted();
 		LOG.info("2 - Waiting to get in");
-		synchronized(LockerByValue.lock("1234")) {
+		synchronized(lockerByValue.lock("1234")) {
 			LOG.info("2 - In the thread");
 			try { Thread.sleep(500); } catch(Exception e) {}
 			LOG.info("2 - Leaving the thread");
@@ -127,7 +150,7 @@ public class TestLockerByValue {
 	public void thread3() {
 		Stopwatch stopWatch = Stopwatch.createStarted();
 		LOG.info("3 - Waiting to get in");
-		synchronized(LockerByValue.lock("0000")) {
+		synchronized(lockerByValue.lock("0000")) {
 			LOG.info("3 - In the thread");
 			try { Thread.sleep(100); } catch(Exception e) {}
 			LOG.info("3 - Leaving the thread");

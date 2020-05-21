@@ -14,10 +14,12 @@ import org.springframework.messaging.MessageChannel;
 import com.dell.rti4t.xd.domain.DataTransporter;
 import com.dell.rti4t.xd.enrich.EventEnricher;
 import com.dell.rti4t.xd.filter.EventFilter;
+import com.dell.rti4t.xd.jmx.VFROInputOutputMetrics;
 import com.dell.rti4t.xd.transformer.MapFieldReducer;
 import com.dell.rti4t.xd.transformer.ObjectListToDataTransporter;
 
 public abstract class AbstractDataTransporterEventHandler implements DataTransporterEventHandler {
+	
 	final protected Logger LOG = LoggerFactory.getLogger(getClass());
 	
 	final protected List<EventFilter> eventFilters;
@@ -28,8 +30,10 @@ public abstract class AbstractDataTransporterEventHandler implements DataTranspo
 	final protected ObjectListToDataTransporter transformer;
 	final protected MessageChannel outputChannel;
 	final private Lifecycle lifeCycle;
+	
+	final protected VFROInputOutputMetrics inputOutputMetrics;
 
-	public AbstractDataTransporterEventHandler(String handlerName, Lifecycle lifeCycle, MessageChannel outputChannel, int batchSize, int batchTimeout, MapFieldReducer reducer, ObjectListToDataTransporter transformer, List<EventFilter> eventFilters, List<EventEnricher> eventEnrichers) {
+	public AbstractDataTransporterEventHandler(String handlerName, VFROInputOutputMetrics inputOutputMetrics, Lifecycle lifeCycle, MessageChannel outputChannel, int batchSize, int batchTimeout, MapFieldReducer reducer, ObjectListToDataTransporter transformer, List<EventFilter> eventFilters, List<EventEnricher> eventEnrichers) {
 		this.batchSize = batchSize;
 		this.batchTimeout = batchTimeout;
 		this.reducer = reducer;
@@ -38,10 +42,11 @@ public abstract class AbstractDataTransporterEventHandler implements DataTranspo
 		this.eventEnrichers = eventEnrichers;
 		this.outputChannel = outputChannel;
 		this.lifeCycle = lifeCycle;
+		this.inputOutputMetrics = inputOutputMetrics;
 	}
 
-	public AbstractDataTransporterEventHandler(String handlerName, Lifecycle lifeCycle, MessageChannel outputChannel, int batchSize, int batchTimeout, MapFieldReducer reducer, ObjectListToDataTransporter transformer, List<EventFilter> eventFilters) {
-		this(handlerName, lifeCycle, outputChannel, batchSize, batchTimeout, reducer, transformer, eventFilters, new ArrayList<EventEnricher>());
+	public AbstractDataTransporterEventHandler(String handlerName, VFROInputOutputMetrics inputOutputMetrics, Lifecycle lifeCycle, MessageChannel outputChannel, int batchSize, int batchTimeout, MapFieldReducer reducer, ObjectListToDataTransporter transformer, List<EventFilter> eventFilters) {
+		this(handlerName, inputOutputMetrics, lifeCycle, outputChannel, batchSize, batchTimeout, reducer, transformer, eventFilters, new ArrayList<EventEnricher>());
 	}
 
 	protected boolean accept(DataTransporter dt) {
@@ -83,7 +88,9 @@ public abstract class AbstractDataTransporterEventHandler implements DataTranspo
 	}
 	
 	protected void chainAndAccumulate(DataTransporter dt) {
+		inputOutputMetrics.incrementInput();
     	if(accept(dt)) {
+    		inputOutputMetrics.incrementOutput();
     		enrich(dt);
     		accumulate(dt);
     	}

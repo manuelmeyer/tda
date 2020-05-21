@@ -9,6 +9,7 @@ public class LacCellReductionFilterImpl implements EventFilter, InitializingBean
 	
 	private EventFilter lacCellFilter;
 	private EventFilter dataReductionFilter;
+	private LockerByValue lockerByValue = LockerByValue.buildLocker("imsi");
 	
 	public void setLacCellFilter(EventFilter lacCellFilter) {
 		this.lacCellFilter = lacCellFilter;
@@ -25,7 +26,7 @@ public class LacCellReductionFilterImpl implements EventFilter, InitializingBean
 	@Override
 	public boolean accept(DataTransporter dt) {
 		String imsi = dt.getFieldValue("imsi");
-		synchronized(LockerByValue.lock(imsi)) {
+		synchronized(lockerByValue.lock(imsi)) {
 			return lacCellFilter.accept(dt) && dataReductionFilter.accept(dt);
 		}
 	}

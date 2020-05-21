@@ -1,15 +1,14 @@
 package com.dell.rti4t.xd.process.eventhandler;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.context.Lifecycle;
 import org.springframework.messaging.MessageChannel;
 
 import com.dell.rti4t.xd.domain.DataTransporter;
-import com.dell.rti4t.xd.enrich.EventEnricher;
 import com.dell.rti4t.xd.eventhandler.AbstractDataTransporterEventHandler;
 import com.dell.rti4t.xd.filter.EventFilter;
+import com.dell.rti4t.xd.jmx.VFROInputOutputMetrics;
 import com.dell.rti4t.xd.transformer.MapFieldReducer;
 import com.dell.rti4t.xd.transformer.ObjectListToDataTransporter;
 import com.google.common.util.concurrent.AtomicLongMap;
@@ -19,8 +18,8 @@ public class CellTowerStatsEventHandler extends AbstractDataTransporterEventHand
 	private AtomicLongMap<String> cellIn;
 	private AtomicLongMap<String> cellOut;
 
-	public CellTowerStatsEventHandler(String handlerName, Lifecycle lifeCycle, MessageChannel outputChannel, int batchSize, int batchTimeout, MapFieldReducer reducer, ObjectListToDataTransporter transformer, List<EventFilter> eventFilters) {
-		super(handlerName, lifeCycle, outputChannel, batchSize, batchTimeout, reducer, transformer, eventFilters);
+	public CellTowerStatsEventHandler(String handlerName, VFROInputOutputMetrics inputOutputMetrics, Lifecycle lifeCycle, MessageChannel outputChannel, int batchSize, int batchTimeout, MapFieldReducer reducer, ObjectListToDataTransporter transformer, List<EventFilter> eventFilters) {
+		super(handlerName, inputOutputMetrics, lifeCycle, outputChannel, batchSize, batchTimeout, reducer, transformer, eventFilters);
 	}
 
 	@Override
