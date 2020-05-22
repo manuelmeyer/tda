@@ -12,36 +12,41 @@ public class LoadCells {
 			def matcher = line =~ /^(\d+),/
 			if(matcher.find()) {
 				def cellId = matcher.group(1);
-				refCells[cellId] = line
+				//println "adding ref $cellId=$line"
+				def lines = refCells[cellId];
+				if(lines == null) {
+					def newLines = [];
+					refCells[cellId] = newLines;
+					lines = newLines;
+				}
+				refCells[cellId] << line;
 			}
 		}
 		
 		def clCells = [];
 		
 		new File(args[1]).eachLine { line ->
-			String[] lacCells = line.split(",");
-			if(lacCells.length != 2) {
-				println "Error on $line";
-			}
-			String[] cells = lacCells[1].split(";");
-			String lac = lacCells[0];
-			cells.each { 
-				def cellLac = it.trim() + "," + lac.trim(); 
-				//println "Adding ${cellLac}"
-				clCells << cellLac; 
-			}
+			clCells << line;
 		}
 		
 		clCells.each {
 			String[] cellLac = it.split(",")
 			if(cellLac.length == 2) {
-				def lac = "," + cellLac[1] + ",";
-				def line = refCells[cellLac[0]];
-				if(line != null && line.contains(lac)) {
-					println " -- found ${line}";					
+				def lac = "," + cellLac[0] + ",";
+				def cellId = cellLac[1];
+				def lines = refCells[cellId];
+				if(lines != null) {
+					lines.any { line -> 
+						if(line.contains(lac)) {
+							println "${line}";	
+							return true;
+						}
+					}			
 				} else {
-					println " -- notfound cellId '${cellLac[0]}' lac '${cellLac[1]}'"
+					println " -- notfound cellId '${cellId}' lac '${lac}'"
 				}
+			} else {
+				println " -- error on line ${it}"
 			}
 		}
 	}

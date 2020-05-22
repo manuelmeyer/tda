@@ -84,13 +84,10 @@ public abstract class AbstractDataTransporterEventHandler implements DataTranspo
 		}
 	}
 	
-	protected void accumulate(DataTransporter dt) {
-	}
+	protected abstract void accumulate(DataTransporter dt);
 	
 	protected void chainAndAccumulate(DataTransporter dt) {
-		inputOutputMetrics.incrementInput();
     	if(accept(dt)) {
-    		inputOutputMetrics.incrementOutput();
     		enrich(dt);
     		accumulate(dt);
     	}
@@ -101,6 +98,7 @@ public abstract class AbstractDataTransporterEventHandler implements DataTranspo
 		List<List<Object>> elements = parse(body);
 		LOG.debug("Accumulating a list of {}", elements.size());
 		int index = 0;
+		inputOutputMetrics.moreInput(elements.size());
 	    for(List<Object> element : elements) {
 	    	try {
 	    		DataTransporter dt = transformer.buildFromObjectList(element);

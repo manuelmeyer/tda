@@ -1,5 +1,7 @@
 package com.dell.rti4t.xd.common;
 
+import static com.dell.rti4t.xd.common.AsciiToNumber.atotime;
+
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -49,16 +51,16 @@ public class ReductionMapHandler {
 		return ismiHistoryMap.getIfPresent(imsi);
 	}
 
-	public static void isInGeofence(String imsi) {
+	public static void isInGeofence(String imsi, String timeUTC) {
 		ImsiHistory imsiHistory = ismiHistoryMap.getIfPresent(imsi);
-		if (imsiHistory != null) {
+		if (imsiHistory != null && imsiHistory.isTimeValid(atotime(timeUTC))) {
 			imsiHistory.isGeoFence(true);
 		}
 	}
 
-	public static boolean isLeavingGeofence(String imsi) {
+	public static boolean isLeavingGeofence(String imsi, String timeUTC) {
 		ImsiHistory imsiHistory = ismiHistoryMap.getIfPresent(imsi);
-		if (imsiHistory != null) {
+		if (imsiHistory != null && imsiHistory.isTimeValid(atotime(timeUTC))) {
 			if(imsiHistory.inGeoFence()) {
 				imsiHistory.isGeoFence(false);
 				return true;

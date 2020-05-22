@@ -1,7 +1,6 @@
 package com.dell.rti4t.xd.common;
 
 import java.io.Serializable;
-import java.util.Arrays;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +28,10 @@ public class ImsiHistory implements Serializable {
 		this.firstSeen = now;
 	}
 	
+	public boolean isTimeValid(long time) {
+		return time > eventTime;
+	}
+	
 	public boolean isReductable(long lac, long cellTower, long now) {
 		accessed++;
 		if(now < eventTime) {
@@ -45,9 +48,6 @@ public class ImsiHistory implements Serializable {
 			}
 			return true;
 		}
-//		this.previousLac = this.lac;
-//		this.previousCellTower = this.cellTower;
-//		this.previousTimeUTC = eventTime;
 		
 		this.lac = lac;
 		this.cellTower = cellTower;
@@ -75,18 +75,18 @@ public class ImsiHistory implements Serializable {
 
 	public void isGeoFence(boolean isInGeofence) {	
 		if(isInGeofence) {
-			if(!this.inGeoFence) {
-				this.inGeoFence = true;
+			if(!inGeoFence) {
+				inGeoFence = true;
 				previousLac = -1;
 				previousCellTower = -1;
 				previousTimeUTC = -1;
 				return;
 			}
 		}
-		this.previousLac = this.lac;
-		this.previousCellTower = this.cellTower;
-		this.previousTimeUTC = eventTime;
-		this.inGeoFence = isInGeofence;
+		previousLac = lac;
+		previousCellTower = cellTower;
+		previousTimeUTC = eventTime;
+		inGeoFence = isInGeofence;
 	}
 	
 	public boolean inGeoFence() {

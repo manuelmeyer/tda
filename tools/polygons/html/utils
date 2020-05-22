@@ -1,0 +1,2 @@
+awk -F',' 'BEGIN{OFS=",";} {print $4,$3;}' network-rail-100p.csv | sort | uniq
+ groovy ~/devs/tda//rti4t-xd-commons/src/main/groovy/LoadCells.groovy all-cell-20200516 nrail-lac-cells-07.csv | tee recap-100

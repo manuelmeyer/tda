@@ -1,10 +1,16 @@
 package com.dell.rti4t.xd.transformer;
 
+import static com.dell.rti4t.xd.testutil.EventBuilder.generateEvent;
+import static com.dell.rti4t.xd.testutil.EventBuilder.generateIntInRange;
+import static com.dell.rti4t.xd.testutil.EventBuilder.generateString;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
-import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +18,7 @@ import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.scheduling.support.SimpleTriggerContext;
 
 import com.dell.rti4t.xd.domain.DataTransporter;
+import com.google.common.collect.Sets;
 
 public class TestPepperManager {
 	
@@ -34,10 +41,30 @@ public class TestPepperManager {
 	}
 	
 	@Test
+	public void canSaltChangeEncryption() throws Exception {
+		PepperManagerImpl pepperManager = new PepperManagerImpl();
+		pepperManager.afterPropertiesSet();
+		
+		Set<String> peppers = Sets.newHashSet();
+		int maxIndex = generateIntInRange(100, 2000);
+		for(int index = 0; index < maxIndex; index++) {
+			peppers.add(pepperManager.getSaltForTime(generateEvent()));
+		}
+		assertEquals(1, peppers.size());
+		
+		pepperManager.setPepper(generateString());
+		
+		maxIndex = generateIntInRange(100, 2000);
+		for(int index = 0; index < maxIndex; index++) {
+			peppers.add(pepperManager.getSaltForTime(generateEvent()));
+		}
+		assertEquals(2, peppers.size());
+	}
+	
+	@Test
 	public void testInterval() throws Exception {
 		PepperManagerImpl pepperManager = new PepperManagerImpl();
 		pepperManager.setCronTrigger("*/5 * * * * *");
-		//pepperManager.setCronTrigger("0 0 0 * * *");
 		pepperManager.afterPropertiesSet();
 		
 		Map<String, Object> valuesBefore = new HashMap<String, Object>();
@@ -50,14 +77,14 @@ public class TestPepperManager {
 		valuesAfter.put("timeUTC", String.valueOf(Long.MAX_VALUE));
 		String salt2 = pepperManager.getSaltForTime(dtAfter);
 		
-		Assert.assertNotEquals(salt1,  salt2);
+		assertNotEquals(salt1,  salt2);
 
 		Thread.sleep(10000);
 		
 		String newSalt1 = pepperManager.getSaltForTime(dtBefore);
-		Assert.assertEquals(newSalt1,  salt2);
+		assertEquals(newSalt1,  salt2);
 
 		String newSalt2 = pepperManager.getSaltForTime(dtAfter);
-		Assert.assertNotEquals(newSalt2,  salt2);
+		assertNotEquals(newSalt2,  salt2);
 	}
 }

@@ -2,6 +2,7 @@
 build/
 bin/
 modules/
+misc/
 
 # Ignore Gradle GUI config
 gradle-app.setting

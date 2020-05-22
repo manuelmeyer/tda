@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jmx.export.annotation.ManagedMetric;
 import org.springframework.jmx.support.MetricType;
-import org.springframework.util.ClassUtils;
 
 public class VFROJMXExposedMetrics {
 	

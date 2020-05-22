@@ -39,7 +39,8 @@ abstract public class AbstractEventHandlerFactory implements DataTransporterEven
 	
     @PostConstruct
     public void createMetrics() {
-    	inputOutputMetrics = new VFROInputOutputMetrics(streamName, "payload", this);
+    	//inputOutputMetrics = new VFROInputOutputMetrics("inputoutput", streamName, this, "eventhandler");
+    	inputOutputMetrics = new VFROInputOutputMetrics(streamName, "eventhandler", this, "inputoutput");
     }
 
     public void setConfiguredHandlerFactoryId(String configuredHandlerFactoryId) {

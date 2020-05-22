@@ -1,0 +1,1 @@
+curl http://localhost:9393/management/jolokia/read/dca:identity=inputoutput,name=noanonetworkrail,type=eventhandler | python -m json.tool

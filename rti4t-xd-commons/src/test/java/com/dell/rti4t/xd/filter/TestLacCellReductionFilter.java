@@ -1,12 +1,10 @@
 package com.dell.rti4t.xd.filter;
 
+import static com.dell.rti4t.xd.testutil.EventBuilder.buildEvent;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -18,6 +16,43 @@ import com.dell.rti4t.xd.filter.DataReductionImpl.ReductionMode;
 public class TestLacCellReductionFilter {
 	
 	static private final Logger LOG = LoggerFactory.getLogger(TestLacCellReductionFilter.class);
+	
+	@Test
+	public void canFilterAndFollowExitProdIssue() throws Exception {
+		DataReductionImpl dataReduction = new DataReductionImpl();
+		dataReduction.setReductionMode(ReductionMode.IMSIS_CHANGE_CELL_ONLY);
+		dataReduction.afterPropertiesSet();
+
+		LacCellFilterImpl lacCellFilter = new LacCellFilterImpl();
+		lacCellFilter.setLacCellFilePath("lac-cells-100p-20200521.csv");
+		lacCellFilter.setFollowExit(true);
+		lacCellFilter.afterPropertiesSet();
+		
+		LacCellReductionFilterImpl underTest = new LacCellReductionFilterImpl();
+		underTest.setDataReductionFilter(dataReduction);
+		underTest.setLacCellFilter(lacCellFilter);
+		
+		DataTransporter dt;
+		dt = buildEvent(24610, 1339412, 1590067404);	
+		assertTrue(underTest.accept(dt));
+		
+		dt = buildEvent(24610, 1339412, 1590069280);	
+		assertFalse(underTest.accept(dt));
+		dt = buildEvent(24610, 1339412, 1590069281);	
+		assertFalse(underTest.accept(dt));
+		dt = buildEvent(24610, 1339412, 1590069282);	
+		assertFalse(underTest.accept(dt));
+		
+		dt = buildEvent(9999, 9999, 1590069284);	
+		assertTrue(underTest.accept(dt));
+		LOG.info("Accepted dt {}", dt);
+
+		dt = buildEvent(24610, 1339412, 1590069282);	
+		assertFalse(underTest.accept(dt));
+
+		dt = buildEvent(24611, 834324, 1590069299);
+		assertFalse(underTest.accept(dt));
+	}
 
 	@Test
 	public void canFilterAndFollowExit() throws Exception {
@@ -108,22 +143,5 @@ public class TestLacCellReductionFilter {
 		assertNull(dt.getFieldValue("previousLac"));
 		assertNull(dt.getFieldValue("previousCellTower"));
 		assertNull(dt.getFieldValue("previousTimeUTC"));
-	}
-	
-	private DataTransporter buildEvent(int lac, int cell, int timeUTC) {
-		Map<String, Object> fields = new HashMap<String, Object>();
-		DataTransporter dt = new DataTransporter(fields, "unused");
-		fields.put("imsi", "123456789012345");
-		fields.put("lac", String.valueOf(lac));
-		fields.put("cellTower", String.valueOf(cell));
-		fields.remove("lastLac");
-		fields.remove("lastCellTower");
-		fields.put("timeUTC", buildUTC(timeUTC));
-		return dt;
-
-	}
-
-	private Object buildUTC(int sec) {
-		return String.valueOf(sec) + "000";
 	}
 }

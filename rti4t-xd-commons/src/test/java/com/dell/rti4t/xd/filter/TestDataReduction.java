@@ -1,5 +1,6 @@
 package com.dell.rti4t.xd.filter;
 
+import static com.dell.rti4t.xd.testutil.EventBuilder.buildEvent;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -18,6 +19,7 @@ import com.dell.rti4t.xd.common.ImsiHistory;
 import com.dell.rti4t.xd.common.ReductionMapHandler;
 import com.dell.rti4t.xd.domain.DataTransporter;
 import com.dell.rti4t.xd.filter.DataReductionImpl.ReductionMode;
+import com.dell.rti4t.xd.testutil.EventBuilder;
 
 public class TestDataReduction {
 	
@@ -225,23 +227,19 @@ public class TestDataReduction {
 		dataReduction.afterPropertiesSet();
 		
 		DataTransporter dt = new DataTransporter();
-		Map<String, Object> fields = new HashMap<String, Object>();
 		
-		dt.setFields(fields);
-		fields.put("imsi", "imsi");
-		fields.put("lac", "10");
-		fields.put("cellTower", "10");
-		fields.put("timeUTC", "10000 00 00 000".replaceAll(" ", ""));
+		dt = buildEvent("imsi", 10, 10, 1000);
 		assertTrue(dataReduction.accept(dt));
-
-		fields.put("timeUTC", "10000 00 30 000".replaceAll(" ", ""));
-		assertFalse(dataReduction.accept(dt));
-		
-		fields.put("lac", "11");
-		fields.put("cellTower", "11");
-		assertTrue(dataReduction.accept(dt));
-		
 		ImsiHistory imsiHistory = ReductionMapHandler.getImsiHistory("imsi");
+
+		dt = buildEvent("imsi", 10, 10, 1030);
+		assertFalse(dataReduction.accept(dt));
+		imsiHistory.isGeoFence(true);
+		
+		dt = buildEvent("imsi", 11, 11, 1030);
+		imsiHistory.isGeoFence(true);
+		assertTrue(dataReduction.accept(dt));
+		
 		LOG.info("Imsi history {}", imsiHistory);
 		assertEquals(imsiHistory.lac, 11);
 		assertEquals(imsiHistory.cellTower, 11);

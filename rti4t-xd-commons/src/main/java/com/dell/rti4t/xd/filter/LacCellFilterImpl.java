@@ -1,17 +1,15 @@
 package com.dell.rti4t.xd.filter;
 
-import static com.gs.collections.impl.tuple.Tuples.pair;
 import static org.apache.commons.lang.StringUtils.isNumeric;
 import static org.springframework.util.StringUtils.isEmpty;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -25,21 +23,17 @@ import com.dell.rti4t.xd.domain.DataTransporter;
 import com.dell.rti4t.xd.files.AbstractFileChangeWatchdog;
 import com.dell.rti4t.xd.files.OnFileChange;
 import com.dell.rti4t.xd.utils.FileUtils;
-import com.gs.collections.api.tuple.Pair;
+import com.google.common.collect.Sets;
 
 public class LacCellFilterImpl implements EventFilter, InitializingBean {
 	
 	static private final Logger LOG = LoggerFactory.getLogger(LacCellFilterImpl.class);
-	static List<Pair<String, String>> forbiddenValues = new ArrayList<Pair<String, String>>();
-	static {
-		forbiddenValues.add(pair("65535", "65535"));
-		forbiddenValues.add(pair("0", "0"));
-	};
-	
+	static Set<String> forbiddenValues = Sets.newHashSet("0", "65535");
+
 	static final private String LAC_SEPARATOR = ",";
 	static final private String CELL_SEPARATOR = ";";
 
-	Map<String, Set<String>> lacCellsStore;// = new HashMap<String, Set<String>>();
+	Map<String, Set<String>> lacCellsStore;
 	
 	private String lacCellFilePath;
 	private String lacField = "lac";
@@ -83,8 +77,11 @@ public class LacCellFilterImpl implements EventFilter, InitializingBean {
 	public boolean accept(DataTransporter dt) {
 		String lac = dt.getFieldValue(lacField);
 		String cell = dt.getFieldValue(cellField);
+		if(areForbiddenValues(lac, cell)) {
+			return false;
+		}
 		if(lacCellsStore == null) {
-			return checkForbiddenValues(lac, cell);
+			return true;
 		}
 		if(lac == null || cell == null) {
 			return false;
@@ -95,26 +92,30 @@ public class LacCellFilterImpl implements EventFilter, InitializingBean {
 		
 		String imsi = dt.getFieldValue("imsi");
 
+
 		if(inGeoFence) {
 			if(followExit) {
-				ReductionMapHandler.isInGeofence(imsi);
+				ReductionMapHandler.isInGeofence(imsi, dt.getFieldValue("timeUTC"));
 			}
 			return true;
 		} else {
 			if(followExit) {
-				return ReductionMapHandler.isLeavingGeofence(imsi);
+				return ReductionMapHandler.isLeavingGeofence(imsi, dt.getFieldValue("timeUTC"));
 			}
 		}
 		return false;
 	}
 	
-	private boolean checkForbiddenValues(String lac, String cell) {
-		for(Pair<String, String> pair : forbiddenValues) {
-			if(pair.getOne().equals(lac) && pair.getOne().equals(cell)) {
-				return false;
+	private boolean areForbiddenValues(String lac, String cell) {
+		if(lac == null || cell == null) {
+			return true;
+		}
+		for(String forbiddenValue : forbiddenValues) {
+			if(forbiddenValue.equals(lac) && forbiddenValue.equals(cell)) {
+				return true;
 			}
 		}
-		return true;
+		return false;
 	}
 
 	@Override
@@ -154,6 +155,9 @@ public class LacCellFilterImpl implements EventFilter, InitializingBean {
 		}
 		long t1 = System.currentTimeMillis();
 		LOG.info("Loaded {} lacs in {} ms", lacCellsStore.size(), (t1 - t0));
+		for(Entry<String, Set<String>> entry : lacCellsStore.entrySet()) {
+			LOG.info("{}={}", entry.getKey(), entry.getValue());
+		}
 		return lacCellsStore;
 	}
 

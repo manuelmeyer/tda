@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 
+import com.dell.rti4t.xd.common.AsciiToNumber;
 import com.dell.rti4t.xd.common.ImsiHistory;
 import com.dell.rti4t.xd.common.ReductionMapHandler;
 import com.dell.rti4t.xd.domain.DataTransporter;
@@ -67,11 +68,9 @@ public class DataReductionImpl implements EventFilter, InitializingBean {
 			return false;
 		}
 
-		long lac = atol(lacStr);
-		long cellTower = atol(cellTowerStr);
-		long eventTimeUTC = atol(eventTimeUTCStr);
-
-		long now = (eventTimeUTC - (eventTimeUTC % 1000)) / 1000;
+		long lac = AsciiToNumber.atol(lacStr);
+		long cellTower = AsciiToNumber.atol(cellTowerStr);
+		long now = AsciiToNumber.atotime(eventTimeUTCStr);
 
 		ImsiHistory history = ReductionMapHandler.getImsiHistory(imsi);
 		
@@ -113,19 +112,6 @@ public class DataReductionImpl implements EventFilter, InitializingBean {
 		return false;
 	}
 
-	static public long atol(String number) {
-		long result = 0;
-		if(number != null) {
-			int maxlength = number.length();
-			for(int index = 0; index < maxlength; index++) {
-				int value = number.charAt(index) - 0x30;
-				result *= 10;
-				result += value;
-			}
-		}
-		return result;
-	}
-
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		if(mode == ReductionMode.NONE) {
@@ -133,15 +119,13 @@ public class DataReductionImpl implements EventFilter, InitializingBean {
 			return;
 		}
 		
-		if(delayBeforeDuplicate == -1) {
-			switch(mode) {
-				case IMSIS_CHANGE_CELL_ONLY :
-					setDelayBeforeDuplicate(8 * 3600); // 8h on the same cell before duplicating
-					break;
-				default:
-					setDelayBeforeDuplicate(60); // 1mn before duplicating in other mode
-					break;
-			}
+		switch(mode) {
+			case IMSIS_CHANGE_CELL_ONLY :
+				setDelayBeforeDuplicate(8 * 3600); // 8h on the same cell before duplicating
+				break;
+			default:
+				setDelayBeforeDuplicate(60); // 1mn before duplicating in other mode
+				break;
 		}
 		
 		LOG.info("Data reduction mode {} based on a change of celltower or a delta of {} seconds", 

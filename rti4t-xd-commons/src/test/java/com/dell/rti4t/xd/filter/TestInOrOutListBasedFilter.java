@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +25,7 @@ public class TestInOrOutListBasedFilter {
 	int linesPerFile = 50; //2_061_541; //20_061_541;
 	
 	@Test // turn it off as the big file cannot be loaded in github
+	@Ignore
 	public void canLoadBigFile() throws Exception {
 		BufferedWriter writer = new BufferedWriter(new FileWriter("/tmp/big-file.csv"));
 		for(int index = 0; index < linesPerFile; index++) {

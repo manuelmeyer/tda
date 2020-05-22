@@ -75,8 +75,11 @@ public class AccumulatorEventHandler extends AbstractDataTransporterEventHandler
 
 	private void fflush(Context context) {
 		try {
-			LOG.debug("Flushing {} for {}", context.marker, Thread.currentThread().getName());
+			if(LOG.isDebugEnabled()) {
+				LOG.debug("Flushing {} for {}", context.marker, Thread.currentThread().getName());
+			}
 			if(context.accumulated > 0) {
+				inputOutputMetrics.moreOutput(context.accumulated);
 				long t0 = currentTimeMillis();
 				Message<String> msg = MessageBuilder.withPayload(context.builder.toString()).setHeader("data-type", context.marker).build();
 				context.builder.setLength(0);

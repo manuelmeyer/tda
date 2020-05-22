@@ -12,11 +12,13 @@ import java.util.Map;
 import java.util.Set;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.dell.rti4t.xd.domain.DataTransporter;
+import com.dell.rti4t.xd.testutil.EventBuilder;
 
 public class TestLacAndCellFilter {
 	
@@ -25,8 +27,24 @@ public class TestLacAndCellFilter {
 	@Test
 	public void canFilterOnLacAndCellsWhenNoFileSet() {
 		LacCellFilterImpl filter = new LacCellFilterImpl();
-		DataTransporter dt = new DataTransporter();
-		Assert.assertTrue(filter.accept(dt));
+		assertTrue(filter.accept(EventBuilder.buildEvent(10, 10, 1000000)));
+	}
+	
+	@Test
+	public void canFilterOnInvalidValues() {
+		LacCellFilterImpl filter = new LacCellFilterImpl();
+		assertFalse(filter.accept(EventBuilder.buildEvent(0, 0, 1000000)));
+		assertFalse(filter.accept(EventBuilder.buildEvent(65535, 65535, 1000000)));
+	}
+
+	
+	@Test
+	@Ignore // more a visual test to check sets are correctly built
+	public void canLoadFileWithMultipleLinesSameLac() throws Exception {
+		LacCellFilterImpl filter = new LacCellFilterImpl();
+		filter.setLacCellFilePath("lac-cells-100p-20200521.csv");
+		filter.afterPropertiesSet();
+		
 	}
 	
 	@Test
@@ -82,16 +100,5 @@ public class TestLacAndCellFilter {
 		LacCellFilterImpl filter = new LacCellFilterImpl();
 		filter.setLacCellFilePath("no-way-I-exists!");
 		filter.afterPropertiesSet();
-		
-		Map<String, Object> fields = new HashMap<String, Object>();
-		DataTransporter dt = new DataTransporter(fields, "unused");
-		fields.put("imsi", "123456789012345");
-		fields.put("lac", "10");
-		fields.put("cellTower", "1");
-		assertTrue(filter.accept(dt));
-		
-		fields.put("lac", "10");
-		fields.put("cellTower", "1");
-		assertTrue(filter.accept(dt));
 	}
 }
