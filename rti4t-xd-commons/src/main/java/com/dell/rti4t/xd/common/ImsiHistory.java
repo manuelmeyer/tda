@@ -12,86 +12,157 @@ public class ImsiHistory implements Serializable {
 	
 	static private final Logger LOG = LoggerFactory.getLogger(ImsiHistory.class);
 	
+	enum RedactableState {
+		REDACTABLE,
+		NON_REDACTABLE,
+		NON_REDACTABLE_DELAY_EXPIRED
+	}
+	
+	class LacCellHistory {
+		volatile public long eventTime;
+		volatile public long lac;
+		volatile public long cellTower;
+		volatile public long firstSeen;
+		
+		public boolean isEquals(long lac, long cellTower) {
+			return this.lac == lac && this.cellTower == cellTower;
+		}
+
+		public void setFields(long lac, long cellTower, long eventTime) {
+			this.lac = lac;
+			this.cellTower = cellTower;
+			this.eventTime = eventTime;
+			this.firstSeen = eventTime;
+		}
+		
+		public RedactableState isRedactable(long lac, long cellTower, long now) {
+			if(isEquals(lac, cellTower)) {
+				eventTime = now;
+				if(now > (firstSeen + ReductionMapHandler.delayBeforeDuplicate)) {
+					firstSeen = now;
+					return RedactableState.NON_REDACTABLE_DELAY_EXPIRED;
+				}
+				return RedactableState.REDACTABLE;
+			}
+			return RedactableState.NON_REDACTABLE;
+		}
+		
+		@Override
+		public String toString() {
+			return MoreObjects.toStringHelper(this)
+								.add("eventTime", eventTime)
+								.add("lac", lac)
+								.add("cellTower", cellTower)
+								.add("firstSeen", firstSeen)
+								.toString();
+		}
+	}
+	
+	volatile LacCellHistory[] lacCellHistory;
 	volatile public short accessed = 0;
-	volatile public long eventTime;
-	volatile public long lac;
-	volatile public long cellTower;
-	volatile public long firstSeen;
 	volatile private boolean inGeoFence;
-	volatile public long previousLac = -1;
-	volatile public long previousCellTower = -1;
-	volatile public long previousTimeUTC = -1;
+	volatile private boolean firstEventInGeoFence;
 	
 	public ImsiHistory(long lac, long cellTower, long now) {
-		this.lac = lac;
-		this.cellTower = cellTower;
-		this.eventTime = now;
-		this.previousTimeUTC = now;
-		this.firstSeen = now;
+		this.lacCellHistory = new LacCellHistory[2];
+		this.lacCellHistory[0] = new LacCellHistory();
+		this.lacCellHistory[1] = new LacCellHistory();
+		this.lacCellHistory[0].lac = lac;
+		this.lacCellHistory[0].cellTower = cellTower;
+		this.lacCellHistory[0].eventTime = now;
+		this.lacCellHistory[0].firstSeen = now;
+		this.inGeoFence = true;
+		this.firstEventInGeoFence = true;
 	}
 	
 	public boolean isTimeValid(long time) {
-		return time > eventTime;
+		return time > eventTime();
 	}
 	
+	private long eventTime() {
+		return Math.max(lacCellHistory[0].eventTime, lacCellHistory[1].eventTime);
+	}
+	
+	//
+	// true -> event is discarded
+	// false -> event is kept
+	//
 	public boolean isReductable(long lac, long cellTower, long now) {
 		accessed++;
-		if(now <= eventTime) {
+		if(now <= eventTime()) {
 			return true;
 		}
 
-		boolean isSameLacCell = (this.lac == lac && this.cellTower == cellTower);
+		RedactableState reductableState = lacCellHistory[0].isRedactable(lac, cellTower, now);
 		
-		if(isSameLacCell) {
-			eventTime = now;
-			if(now > (firstSeen + ReductionMapHandler.delayBeforeDuplicate)) {
-				firstSeen = now;
-				return false;
-			}
+		if(reductableState == RedactableState.NON_REDACTABLE_DELAY_EXPIRED) {
+			return false;
+		}
+		if(reductableState == RedactableState.REDACTABLE) {
 			return true;
 		}
 		
-		this.lac = lac;
-		this.cellTower = cellTower;
-		this.eventTime = now;
-		this.firstSeen = now;
+		reductableState = lacCellHistory[1].isRedactable(lac, cellTower, now);
+
+		if(reductableState == RedactableState.NON_REDACTABLE_DELAY_EXPIRED) {
+			return false;
+		}
+		if(reductableState == RedactableState.REDACTABLE) {
+			return true;
+		}
 		
+		assignLacCellHistory(lac, cellTower, now); // new assignment
 		return false;
 	}
-
-	public void reset(long lac, long cellTower, long now) {
-	}
-
-	@Override
-	public String toString() {
-		return MoreObjects.toStringHelper(this)
-							.add("eventTime", eventTime)
-							.add("lac", lac)
-							.add("cellTower", cellTower)
-							.add("inGeoFence", inGeoFence)
-							.add("previousLac", previousLac )
-							.add("previousCellTower", previousCellTower) 
-							.add("previousTimeUTC", previousTimeUTC) 
-							.toString();
+	
+	private void assignLacCellHistory(long lac, long cellTower, long now) {
+		int nextIndex = lacCellHistory[1].eventTime > lacCellHistory[0].eventTime ? 0 : 1;
+		lacCellHistory[nextIndex].setFields(lac, cellTower, now);
 	}
 
 	public void isGeoFence(boolean isInGeofence) {	
 		if(isInGeofence) {
 			if(!inGeoFence) {
 				inGeoFence = true;
-				previousLac = -1;
-				previousCellTower = -1;
-				previousTimeUTC = -1;
+				firstEventInGeoFence = true;
+//				lacCellHistory[0].setFields(-1, -1, -1);
+//				lacCellHistory[1].setFields(-1, -1, -1);
 				return;
 			}
 		}
-		previousLac = lac;
-		previousCellTower = cellTower;
-		previousTimeUTC = eventTime;
+		firstEventInGeoFence = false;
 		inGeoFence = isInGeofence;
 	}
 	
 	public boolean inGeoFence() {
 		return inGeoFence;
+	}
+
+	public long previousLac() {
+		return firstEventInGeoFence ? -1 : lacCellHistory[0].eventTime > lacCellHistory[1].eventTime ? 
+					lacCellHistory[1].lac :
+					lacCellHistory[0].lac;
+
+	}
+
+	public long previousCellTower() {
+		return firstEventInGeoFence ? -1 : lacCellHistory[0].eventTime > lacCellHistory[1].eventTime ? 
+				lacCellHistory[1].cellTower :
+				lacCellHistory[0].cellTower;
+	}
+
+	public long previousTimeUTC() {
+		return firstEventInGeoFence ? -1 : lacCellHistory[0].eventTime > lacCellHistory[1].eventTime ? 
+				lacCellHistory[1].eventTime :
+				lacCellHistory[0].eventTime;
+	}
+	
+	@Override
+	public String toString() {
+		return MoreObjects.toStringHelper(this)
+							.add("inGeoFence", inGeoFence)
+							.add("lacCellHistory[0]", lacCellHistory[0])
+							.add("lacCellHistory[1]", lacCellHistory[1])
+							.toString();
 	}
 }

@@ -31,5 +31,4 @@ public abstract class DataTransporterAssert {
 			assertNull(fieldValue);
 		}
 	}
-
 }

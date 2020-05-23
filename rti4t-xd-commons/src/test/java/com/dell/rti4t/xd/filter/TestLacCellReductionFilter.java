@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.dell.rti4t.xd.common.ImsiHistory;
 import com.dell.rti4t.xd.common.ReductionMapHandler;
 import com.dell.rti4t.xd.domain.DataTransporter;
 import com.dell.rti4t.xd.filter.DataReductionImpl.ReductionMode;
@@ -18,10 +19,60 @@ public class TestLacCellReductionFilter {
 	static private final Logger LOG = LoggerFactory.getLogger(TestLacCellReductionFilter.class);
 	
 	@Test
-	public void canFilterAndFollowExitProdIssueDupEnteringCells() throws Exception {
+	public void canDedupEventsAndResetOnEnterGF() throws Exception {
+		/*
+		 lac, cell in
+			56,12670
+			56,13121
+			56,13127
+			56,14399
+		 lac, cell out
+		    9999,*
+		 */
+		
 		LacCellReductionFilterImpl underTest = createFilter("lac-cells-100p-20200521.csv");
 		
-		LOG.info(" -- Reduction delay is {}", ReductionMapHandler.delayBeforeDuplicate);
+		DataTransporter dt;
+		dt = buildEvent(10000, 56, 12670);
+		
+		assertTrue(underTest.accept(dt));
+		assertDtEquals(dt, 10000, 56, 12670);
+
+		dt = buildEvent(10001, 56, 13121);
+		assertTrue(underTest.accept(dt));
+		assertDtEquals(dt, 10001, 56, 13121, 10000, 56, 12670);
+		
+		for(int index = 2; index < 20; index += 2) {
+			dt = buildEvent(10000 + index, 56, 13121);
+			assertFalse(underTest.accept(dt));
+			dt = buildEvent(10000 + index + 1, 56, 12670);
+			assertFalse(underTest.accept(dt));
+		}
+		
+		dt = buildEvent(10030, 56, 14399);
+		assertTrue(underTest.accept(dt));
+		assertDtEquals(dt, 10030, 56, 14399, 10019, 56, 12670);
+		
+		dt = buildEvent(10031, 9999, 0);
+		assertTrue(underTest.accept(dt));
+		assertDtEquals(dt, 10031, 9999, 0, 10030, 56, 14399);
+		
+		dt = buildEvent(10040, 56, 14399);
+		assertTrue(underTest.accept(dt));
+		assertDtEquals(dt, 10040, 56, 14399);
+		
+		dt = buildEvent(10041, 9999, 0);
+		assertTrue(underTest.accept(dt));
+		assertDtEquals(dt, 10041, 9999, 0, 10040, 56, 14399);
+		
+		dt = buildEvent(10050, 56, 14399);
+		assertTrue(underTest.accept(dt));
+		assertDtEquals(dt, 10050, 56, 14399);
+	}
+	
+	@Test
+	public void canFilterAndFollowExitProdIssueDupEnteringCells() throws Exception {
+		LacCellReductionFilterImpl underTest = createFilter("lac-cells-100p-20200521.csv");
 		
 		DataTransporter dt;
 		boolean check;
@@ -30,6 +81,8 @@ public class TestLacCellReductionFilter {
 		assertTrue(underTest.accept(dt));
 		assertDtEquals(dt, 1590224216, 24606, 1500190);
 		LOG.info("dt {}", dt);
+		ImsiHistory imsiHistory = ReductionMapHandler.getImsiHistory("123456789012345");
+		LOG.info("imsiHistory {}", imsiHistory);
 		
 		dt = buildEvent(1590224218, 24606, 812574);
 		assertTrue(underTest.accept(dt));

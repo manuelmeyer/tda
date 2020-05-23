@@ -96,10 +96,10 @@ public class DataReductionImpl implements EventFilter, InitializingBean {
 				dt.putFieldValue("accessed", valueOf(history.accessed));
 				dt.putFieldValue("reducted", format("OK-LACCELLCHANGE-%s", currentThread().getName()));
 			} else if(mode == ReductionMode.IMSIS_CHANGE_CELL_ONLY) {
-				if(history.previousLac != -1 && history.previousCellTower != -1) {
-					dt.putFieldValue("previousLac", valueOf(history.previousLac));
-					dt.putFieldValue("previousCellTower", valueOf(history.previousCellTower));
-					dt.putFieldValue("previousTimeUTC", valueOf(history.previousTimeUTC) + "000");
+				if(history.previousLac() != -1 && history.previousCellTower() != -1) {
+					dt.putFieldValue("previousLac", valueOf(history.previousLac()));
+					dt.putFieldValue("previousCellTower", valueOf(history.previousCellTower()));
+					dt.putFieldValue("previousTimeUTC", valueOf(history.previousTimeUTC()) + "000");
 				}
 			}
 			dt.putFieldValue("_thread", Thread.currentThread().getName());
