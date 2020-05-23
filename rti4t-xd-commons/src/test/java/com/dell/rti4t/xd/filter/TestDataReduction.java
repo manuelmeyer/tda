@@ -1,6 +1,6 @@
 package com.dell.rti4t.xd.filter;
 
-import static com.dell.rti4t.xd.testutil.EventBuilder.buildEvent;
+import static com.dell.rti4t.xd.testutil.EventTestBuilder.buildEvent;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -19,7 +19,7 @@ import com.dell.rti4t.xd.common.ImsiHistory;
 import com.dell.rti4t.xd.common.ReductionMapHandler;
 import com.dell.rti4t.xd.domain.DataTransporter;
 import com.dell.rti4t.xd.filter.DataReductionImpl.ReductionMode;
-import com.dell.rti4t.xd.testutil.EventBuilder;
+import com.dell.rti4t.xd.testutil.EventTestBuilder;
 
 public class TestDataReduction {
 	

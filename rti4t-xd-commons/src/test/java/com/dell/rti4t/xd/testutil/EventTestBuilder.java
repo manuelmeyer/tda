@@ -7,7 +7,7 @@ import java.util.UUID;
 
 import com.dell.rti4t.xd.domain.DataTransporter;
 
-public class EventBuilder {
+public class EventTestBuilder {
 	
 	private static final Random random = new Random();
 	
@@ -54,5 +54,4 @@ public class EventBuilder {
 	public static String generateString() {
 		return UUID.randomUUID().toString();
 	}
-
 }

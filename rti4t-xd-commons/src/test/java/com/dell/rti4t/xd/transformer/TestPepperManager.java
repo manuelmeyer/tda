@@ -1,8 +1,8 @@
 package com.dell.rti4t.xd.transformer;
 
-import static com.dell.rti4t.xd.testutil.EventBuilder.generateEvent;
-import static com.dell.rti4t.xd.testutil.EventBuilder.generateIntInRange;
-import static com.dell.rti4t.xd.testutil.EventBuilder.generateString;
+import static com.dell.rti4t.xd.testutil.EventTestBuilder.generateEvent;
+import static com.dell.rti4t.xd.testutil.EventTestBuilder.generateIntInRange;
+import static com.dell.rti4t.xd.testutil.EventTestBuilder.generateString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 

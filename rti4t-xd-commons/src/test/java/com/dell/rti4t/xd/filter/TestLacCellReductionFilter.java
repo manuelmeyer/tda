@@ -1,9 +1,8 @@
 package com.dell.rti4t.xd.filter;
 
-import static com.dell.rti4t.xd.testutil.EventBuilder.buildEvent;
-import static org.junit.Assert.assertEquals;
+import static com.dell.rti4t.xd.testutil.DataTransporterAssert.assertDtEquals;
+import static com.dell.rti4t.xd.testutil.EventTestBuilder.buildEvent;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
@@ -33,32 +32,32 @@ public class TestLacCellReductionFilter {
 		underTest.setLacCellFilter(lacCellFilter);
 		
 		DataTransporter dt;
-		dt = buildEvent(24610, 1339412, 1590067404);	
+		dt = buildEvent(24610, 1339412, 1590067404); // enter
 		assertTrue(underTest.accept(dt));
 		assertDtEquals(dt, 24610, 1339412, 1590067404);
 		
-		dt = buildEvent(24610, 1339412, 1590069280);	
+		dt = buildEvent(24610, 1339412, 1590069280); // same
 		assertFalse(underTest.accept(dt));
-		dt = buildEvent(24610, 1339412, 1590069281);	
+		dt = buildEvent(24610, 1339412, 1590069281); // same	
 		assertFalse(underTest.accept(dt));
-		dt = buildEvent(24610, 1339412, 1590069282);	
+		dt = buildEvent(24610, 1339412, 1590069282); // same	
 		assertFalse(underTest.accept(dt));
 		
-		dt = buildEvent(9999, 9999, 1590069284);	
+		dt = buildEvent(9999, 9999, 1590069284); // exit point
 		assertTrue(underTest.accept(dt));
 		assertDtEquals(dt, 9999, 9999, 1590069284, 24610, 1339412, 1590069282);
 
-		dt = buildEvent(24610, 1339412, 1590069282);	
+		dt = buildEvent(24610, 1339412, 1590069282); // event in the past
 		assertFalse(underTest.accept(dt));
 
-		dt = buildEvent(24611, 834324, 1590069299);
+		dt = buildEvent(24611, 834324, 1590069299); // out of GF
 		assertFalse(underTest.accept(dt));
 		
-		dt = buildEvent(24610, 1339412, 1591069299);
+		dt = buildEvent(24610, 1339412, 1591069299); // enter
 		assertTrue(underTest.accept(dt));
 		assertDtEquals(dt, 24610, 1339412, 1591069299);
 
-		dt = buildEvent(9999, 0, 1591079299);
+		dt = buildEvent(9999, 0, 1591079299); // exit point
 		assertTrue(underTest.accept(dt));
 		assertDtEquals(dt, 9999, 0, 1591079299, 24610, 1339412, 1591069299);
 	}
@@ -80,81 +79,58 @@ public class TestLacCellReductionFilter {
 		
 		DataTransporter dt;
 		
-		dt = buildEvent(10, 1, 60);	
+		dt = buildEvent(10, 1, 60);	// enter
 		assertTrue(underTest.accept(dt));
 		assertDtEquals(dt, 10, 1, 60);
 
-		dt = buildEvent(12, 5, 62);		
+		dt = buildEvent(12, 5, 62);	// move inside GF	
 		assertTrue(underTest.accept(dt));		
 		assertDtEquals(dt, 12, 5, 62, 10, 1, 60);
 
-		dt = buildEvent(12, 5, 63);
+		dt = buildEvent(12, 5, 63); // same
 		assertFalse(underTest.accept(dt));
 
-		dt = buildEvent(12, 5, 64);
+		dt = buildEvent(12, 5, 64); // same
 		assertFalse(underTest.accept(dt));
 
-		dt = buildEvent(12, 5, 65);
+		dt = buildEvent(12, 5, 65); // same
 		assertFalse(underTest.accept(dt));
 		
-		dt = buildEvent(12, 5, 66);
+		dt = buildEvent(12, 5, 66); // same
 		assertFalse(underTest.accept(dt));
 		
-		dt = buildEvent(10, 1, 67);		
+		dt = buildEvent(10, 1, 67);	// move inside GF
 		assertTrue(underTest.accept(dt));
 		assertDtEquals(dt, 10, 1, 67, 12, 5, 66);
 
 		dt = buildEvent(99, 99, 84);
-		assertTrue(underTest.accept(dt));
+		assertTrue(underTest.accept(dt)); // exit point
 		assertDtEquals(dt, 99, 99, 84, 10, 1, 67);
 
-		dt = buildEvent(999, 999, 90);
+		dt = buildEvent(999, 999, 90); // out of GF
 		assertFalse(underTest.accept(dt));
 		
-		dt = buildEvent(10, 1, 95);		
+		dt = buildEvent(10, 1, 95);	// enter
 		assertTrue(underTest.accept(dt));
 		assertDtEquals(dt, 10, 1, 95);
 		
 		dt = buildEvent(999, 999, 100);
-		assertTrue(underTest.accept(dt));
+		assertTrue(underTest.accept(dt)); // exit point
 		assertDtEquals(dt, 999, 999, 100, 10, 1, 95);
 		
-		dt = buildEvent(11, 11, 110);
+		dt = buildEvent(11, 11, 110); // enter
 		assertTrue(underTest.accept(dt));
 		assertDtEquals(dt, 11, 11, 110);
 		
-		dt = buildEvent(100, 0, 120);
+		dt = buildEvent(100, 0, 120); // move inside GF
 		assertTrue(underTest.accept(dt));
 		assertDtEquals(dt, 100, 0, 120, 11, 11, 110);
 
-		dt = buildEvent(999, 999, 130);
+		dt = buildEvent(999, 999, 130); // exit point
 		assertTrue(underTest.accept(dt));
 		assertDtEquals(dt, 999, 999, 130, 100, 0, 120);
-	}
-	
-	private void assertDtEquals(DataTransporter dt, Integer lac, Integer cell, Integer timeUTC) {
-		assertDtEquals(dt, lac, cell, timeUTC, null, null, null);
-	}
-	
-	private void assertDtEquals(DataTransporter dt, Integer lac, Integer cell, Integer timeUTC, Integer formerLac, Integer formerCell, Integer formerTimeUTC) {
-		assertEquals(String.valueOf(lac), dt.getFieldValue("lac"));
-		assertEquals(String.valueOf(cell), dt.getFieldValue("cellTower"));
-		assertEquals(String.valueOf(timeUTC) + "000", dt.getFieldValue("timeUTC"));
-		asssertNullOrEquals(formerLac, dt.getFieldValue("previousLac"));
-		asssertNullOrEquals(formerCell, dt.getFieldValue("previousCellTower"));
-		asssertNullOrEquals(nullOrAdd(formerTimeUTC, "000"), dt.getFieldValue("previousTimeUTC"));
-	}
-
-	private String nullOrAdd(Integer value, String suffix) {
-		return value == null ? null : String.valueOf(value) + suffix;
-	}
-
-	private void asssertNullOrEquals(Object value, String fieldValue) {
-		if(value != null) {
-			assertEquals(String.valueOf(value), fieldValue);
-		} else {
-			assertNull(fieldValue);
-		}
-	}
-
+		
+		dt = buildEvent(999, 999, 140); // out of GF
+		assertFalse(underTest.accept(dt));
+	}	
 }

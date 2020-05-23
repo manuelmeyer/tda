@@ -18,7 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.dell.rti4t.xd.domain.DataTransporter;
-import com.dell.rti4t.xd.testutil.EventBuilder;
+import com.dell.rti4t.xd.testutil.EventTestBuilder;
 
 public class TestLacAndCellFilter {
 	
@@ -27,14 +27,14 @@ public class TestLacAndCellFilter {
 	@Test
 	public void canFilterOnLacAndCellsWhenNoFileSet() {
 		LacCellFilterImpl filter = new LacCellFilterImpl();
-		assertTrue(filter.accept(EventBuilder.buildEvent(10, 10, 1000000)));
+		assertTrue(filter.accept(EventTestBuilder.buildEvent(10, 10, 1000000)));
 	}
 	
 	@Test
 	public void canFilterOnInvalidValues() {
 		LacCellFilterImpl filter = new LacCellFilterImpl();
-		assertFalse(filter.accept(EventBuilder.buildEvent(0, 0, 1000000)));
-		assertFalse(filter.accept(EventBuilder.buildEvent(65535, 65535, 1000000)));
+		assertFalse(filter.accept(EventTestBuilder.buildEvent(0, 0, 1000000)));
+		assertFalse(filter.accept(EventTestBuilder.buildEvent(65535, 65535, 1000000)));
 	}
 
 	
