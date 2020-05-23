@@ -83,6 +83,8 @@ public class DataReductionImpl implements EventFilter, InitializingBean {
 				dt.putFieldValue("reducted", "OK-FIRSTSEEN");
 			}
 			ReductionMapHandler.newImsiHistory(imsi, lac, cellTower, now);
+			dt.putFieldValue("_thread", Thread.currentThread().getName());
+			dt.putFieldValue("_time", String.valueOf(System.currentTimeMillis()));
 			return true;
 		}
 		
@@ -100,6 +102,8 @@ public class DataReductionImpl implements EventFilter, InitializingBean {
 					dt.putFieldValue("previousTimeUTC", valueOf(history.previousTimeUTC) + "000");
 				}
 			}
+			dt.putFieldValue("_thread", Thread.currentThread().getName());
+			dt.putFieldValue("_time", String.valueOf(System.currentTimeMillis()));
 			return true;
 		}
 		

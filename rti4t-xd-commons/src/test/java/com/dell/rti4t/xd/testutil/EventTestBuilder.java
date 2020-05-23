@@ -11,7 +11,7 @@ public class EventTestBuilder {
 	
 	private static final Random random = new Random();
 	
-	public static DataTransporter buildEvent(String imsi, int lac, int cell, int timeUTC) {
+	public static DataTransporter buildEvent(String imsi, int timeUTC, int lac, int cell) {
 		Map<String, Object> fields = new HashMap<String, Object>();
 		DataTransporter dt = new DataTransporter(fields, "unused");
 		fields.put("imsi", imsi);
@@ -43,8 +43,8 @@ public class EventTestBuilder {
 		return Math.abs(random.nextInt());
 	}
 
-	public static DataTransporter buildEvent(int lac, int cell, int timeUTC) {
-		return buildEvent("123456789012345", lac, cell, timeUTC);
+	public static DataTransporter buildEvent(int timeUTC, int lac, int cell) {
+		return buildEvent("123456789012345", timeUTC, lac, cell);
 	}
 
 	public static String buildUTC(int sec) {

@@ -27,5 +27,4 @@ public abstract class AsciiToNumber {
 		}
 		return atol(time.substring(0, time.length() - 3));
 	}
-
 }

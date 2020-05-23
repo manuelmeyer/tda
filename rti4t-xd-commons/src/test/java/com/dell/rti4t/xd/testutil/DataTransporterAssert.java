@@ -7,11 +7,11 @@ import com.dell.rti4t.xd.domain.DataTransporter;
 
 public abstract class DataTransporterAssert {
 	
-	public static void assertDtEquals(DataTransporter dt, Integer lac, Integer cell, Integer timeUTC) {
-		assertDtEquals(dt, lac, cell, timeUTC, null, null, null);
+	public static void assertDtEquals(DataTransporter dt, Integer timeUTC, Integer lac, Integer cell) {
+		assertDtEquals(dt, timeUTC, lac, cell, null, null, null);
 	}
 	
-	public static void assertDtEquals(DataTransporter dt, Integer lac, Integer cell, Integer timeUTC, Integer formerLac, Integer formerCell, Integer formerTimeUTC) {
+	public static void assertDtEquals(DataTransporter dt, Integer timeUTC, Integer lac, Integer cell, Integer formerTimeUTC, Integer formerLac, Integer formerCell) {
 		assertEquals(String.valueOf(lac), dt.getFieldValue("lac"));
 		assertEquals(String.valueOf(cell), dt.getFieldValue("cellTower"));
 		assertEquals(String.valueOf(timeUTC) + "000", dt.getFieldValue("timeUTC"));

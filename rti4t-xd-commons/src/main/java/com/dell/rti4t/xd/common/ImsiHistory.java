@@ -5,20 +5,22 @@ import java.io.Serializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.MoreObjects;
+
 @SuppressWarnings("serial")
 public class ImsiHistory implements Serializable {
 	
 	static private final Logger LOG = LoggerFactory.getLogger(ImsiHistory.class);
 	
-	public short accessed = 0;
-	public long eventTime;
-	public long lac;
-	public long cellTower;
-	public long firstSeen;
-	private boolean inGeoFence;
-	public long previousLac = -1;
-	public long previousCellTower = -1;
-	public long previousTimeUTC = -1;
+	volatile public short accessed = 0;
+	volatile public long eventTime;
+	volatile public long lac;
+	volatile public long cellTower;
+	volatile public long firstSeen;
+	volatile private boolean inGeoFence;
+	volatile public long previousLac = -1;
+	volatile public long previousCellTower = -1;
+	volatile public long previousTimeUTC = -1;
 	
 	public ImsiHistory(long lac, long cellTower, long now) {
 		this.lac = lac;
@@ -34,7 +36,7 @@ public class ImsiHistory implements Serializable {
 	
 	public boolean isReductable(long lac, long cellTower, long now) {
 		accessed++;
-		if(now < eventTime) {
+		if(now <= eventTime) {
 			return true;
 		}
 
@@ -62,15 +64,15 @@ public class ImsiHistory implements Serializable {
 
 	@Override
 	public String toString() {
-		return "ImsiHistory [accessed=" + accessed 
-				+ ", eventTime=" + eventTime
-				+ ", lac=" + lac
-				+ ", cellTower=" + cellTower
-				+ ", inGeoFence=" + inGeoFence 
-				+ ", previousLac=" + previousLac 
-				+ ", previousCellTower=" + previousCellTower 
-				+ ", previousTimeUTC=" + previousTimeUTC 
-				+ "]";
+		return MoreObjects.toStringHelper(this)
+							.add("eventTime", eventTime)
+							.add("lac", lac)
+							.add("cellTower", cellTower)
+							.add("inGeoFence", inGeoFence)
+							.add("previousLac", previousLac )
+							.add("previousCellTower", previousCellTower) 
+							.add("previousTimeUTC", previousTimeUTC) 
+							.toString();
 	}
 
 	public void isGeoFence(boolean isInGeofence) {	

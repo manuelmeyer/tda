@@ -92,7 +92,6 @@ public class LacCellFilterImpl implements EventFilter, InitializingBean {
 		
 		String imsi = dt.getFieldValue("imsi");
 
-
 		if(inGeoFence) {
 			if(followExit) {
 				ReductionMapHandler.isInGeofence(imsi, dt.getFieldValue("timeUTC"));
