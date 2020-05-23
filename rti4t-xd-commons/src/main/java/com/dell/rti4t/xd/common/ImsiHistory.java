@@ -59,22 +59,6 @@ public class ImsiHistory implements Serializable {
 		return false;
 	}
 
-	public void reset(long lac, long cellTower, long now) {
-	}
-
-	@Override
-	public String toString() {
-		return MoreObjects.toStringHelper(this)
-							.add("eventTime", eventTime)
-							.add("lac", lac)
-							.add("cellTower", cellTower)
-							.add("inGeoFence", inGeoFence)
-							.add("previousLac", previousLac )
-							.add("previousCellTower", previousCellTower) 
-							.add("previousTimeUTC", previousTimeUTC) 
-							.toString();
-	}
-
 	public void isGeoFence(boolean isInGeofence) {	
 		if(isInGeofence) {
 			if(!inGeoFence) {
@@ -93,5 +77,18 @@ public class ImsiHistory implements Serializable {
 	
 	public boolean inGeoFence() {
 		return inGeoFence;
+	}
+
+	@Override
+	public String toString() {
+		return MoreObjects.toStringHelper(this)
+							.add("eventTime", eventTime)
+							.add("lac", lac)
+							.add("cellTower", cellTower)
+							.add("inGeoFence", inGeoFence)
+							.add("previousLac", previousLac )
+							.add("previousCellTower", previousCellTower) 
+							.add("previousTimeUTC", previousTimeUTC) 
+							.toString();
 	}
 }

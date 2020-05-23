@@ -22,13 +22,7 @@ public class EventTestBuilder {
 	}
 	
 	public static DataTransporter generateEvent() {
-		Map<String, Object> fields = new HashMap<String, Object>();
-		DataTransporter dt = new DataTransporter(fields, "unused");
-		fields.put("imsi", generateString());
-		fields.put("lac", String.valueOf(generateAbsInt()));
-		fields.put("cellTower", String.valueOf(generateAbsInt()));
-		fields.put("timeUTC", buildUTC(generateAbsInt()));
-		return dt;
+		return buildEvent(generateString(), generateAbsInt(), generateAbsInt(), generateAbsInt());
 	}
 	
 	public static int generateIntInRange(int low, int high) {
