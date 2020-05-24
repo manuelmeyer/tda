@@ -19,6 +19,7 @@ public class ReductionMapHandler {
 	static private int initialCapacity = 500_000;
 	static private long expireAfterInSec = 7201L;
 	static private int concurrencyLevel = 32;
+	static protected boolean useSimpleRedact = true;
 	
 	static private Cache<String, ImsiHistory> ismiHistoryMap = emptyCache();
 	
@@ -70,7 +71,9 @@ public class ReductionMapHandler {
 	}
 
 	public static void newImsiHistory(String imsi, long lac, long cellTower, long now) {
-		ImsiHistory newEntry = new ImsiHistory(lac, cellTower, now);
+		ImsiHistory newEntry = useSimpleRedact 
+				? new ImsiHistorySimpleRedact(lac, cellTower, now)
+				: new ImsiHistoryStrongRedact(lac, cellTower, now);
 		newEntry.isGeoFence(true);
 		ismiHistoryMap.put(imsi, newEntry);
 	}

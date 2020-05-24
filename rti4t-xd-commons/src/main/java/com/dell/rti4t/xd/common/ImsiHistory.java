@@ -2,15 +2,8 @@ package com.dell.rti4t.xd.common;
 
 import java.io.Serializable;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.MoreObjects;
-
 @SuppressWarnings("serial")
-public class ImsiHistory implements Serializable {
-	
-	static private final Logger LOG = LoggerFactory.getLogger(ImsiHistory.class);
+public abstract class ImsiHistory implements Serializable {
 	
 	volatile public short accessed = 0;
 	volatile public long eventTime;
@@ -23,72 +16,35 @@ public class ImsiHistory implements Serializable {
 	volatile public long previousTimeUTC = -1;
 	
 	public ImsiHistory(long lac, long cellTower, long now) {
-		this.lac = lac;
-		this.cellTower = cellTower;
-		this.eventTime = now;
-		this.previousTimeUTC = now;
-		this.firstSeen = now;
 	}
 	
-	public boolean isTimeValid(long time) {
-		return time > eventTime;
-	}
+	public abstract boolean isTimeValid(long time);
 	
-	public boolean isReductable(long lac, long cellTower, long now) {
-		accessed++;
-		if(now <= eventTime) {
-			return true;
-		}
-
-		boolean isSameLacCell = (this.lac == lac && this.cellTower == cellTower);
+	public abstract boolean isReductable(long lac, long cellTower, long now);
 		
-		if(isSameLacCell) {
-			eventTime = now;
-			if(now > (firstSeen + ReductionMapHandler.delayBeforeDuplicate)) {
-				firstSeen = now;
-				return false;
-			}
-			return true;
-		}
-		
-		this.lac = lac;
-		this.cellTower = cellTower;
-		this.eventTime = now;
-		this.firstSeen = now;
-		
-		return false;
-	}
+	protected abstract void enterGeofence();
+	
+	protected abstract void followGeofence();
 
 	public void isGeoFence(boolean isInGeofence) {	
 		if(isInGeofence) {
 			if(!inGeoFence) {
 				inGeoFence = true;
-				previousLac = -1;
-				previousCellTower = -1;
-				previousTimeUTC = -1;
+				enterGeofence();
+//				previousLac = -1;
+//				previousCellTower = -1;
+//				previousTimeUTC = -1;
 				return;
 			}
 		}
-		previousLac = lac;
-		previousCellTower = cellTower;
-		previousTimeUTC = eventTime;
+		followGeofence();
+//		previousLac = lac;
+//		previousCellTower = cellTower;
+//		previousTimeUTC = eventTime;
 		inGeoFence = isInGeofence;
 	}
 	
 	public boolean inGeoFence() {
 		return inGeoFence;
-	}
-
-	@Override
-	public String toString() {
-		return MoreObjects.toStringHelper(this)
-							.add("eventTime", eventTime)
-							.add("lac", lac)
-							.add("cellTower", cellTower)
-							.add("inGeoFence", inGeoFence)
-							.add("previousLac", previousLac )
-							.add("previousCellTower", previousCellTower) 
-							.add("previousTimeUTC", previousTimeUTC) 
-							.toString();
 	}
 }
