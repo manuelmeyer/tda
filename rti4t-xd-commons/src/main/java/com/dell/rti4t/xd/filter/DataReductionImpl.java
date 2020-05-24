@@ -16,8 +16,6 @@ import com.dell.rti4t.xd.domain.DataTransporter;
 
 public class DataReductionImpl implements EventFilter, InitializingBean {
 	
-	private int delayBeforeDuplicate = -1; // 8 * 60 + 1; // 2h 1mn
-	
 	private static final Logger LOG = LoggerFactory.getLogger(DataReductionImpl.class);
 	
 	public enum ReductionMode {
@@ -31,7 +29,6 @@ public class DataReductionImpl implements EventFilter, InitializingBean {
 
 	public void setDelayBeforeDuplicate(int delay) {
 		LOG.info("Setting delay before duplicating on the same cell to {} sec", delay);
-		delayBeforeDuplicate = delay;
 		ReductionMapHandler.setDelayBeforeDuplicate(delay);
 	}
 	
