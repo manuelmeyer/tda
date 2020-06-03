@@ -1,21 +1,23 @@
 package com.dell.rti4t.xd.common;
 
-import java.io.Serializable;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.MoreObjects;
 
 @SuppressWarnings("serial")
-public class ImsiHistoryStrongRedact extends ImsiHistory {
+public class ImsiHistoryStrongDedup extends ImsiHistory {
 	
-	static private final Logger LOG = LoggerFactory.getLogger(ImsiHistoryStrongRedact.class);
+	static private final Logger LOG = LoggerFactory.getLogger(ImsiHistoryStrongDedup.class);
 	
-	enum RedactableState {
-		REDACTABLE,
-		NON_REDACTABLE,
-		NON_REDACTABLE_DELAY_EXPIRED
+	enum DuplicateState {
+		// imsi was seen on the last 2 recorded <lac, cell>
+		DUPLICATED,
+		// imsi was not seen on the last 2 recorded <lac, cell>
+		NON_DUPLICATED,
+		// imsi was seen on the last 2 recorded <lac, cell> but kept the same position 
+		// for more than ReductionMapHandler.delayBeforeDuplicate seconds.
+		DUPLICATED_WITH_EXPIRED_IDLE_TIME
 	}
 	
 	class LacCellHistory {
@@ -35,16 +37,16 @@ public class ImsiHistoryStrongRedact extends ImsiHistory {
 			this.firstSeen = eventTime;
 		}
 		
-		public RedactableState isRedactable(long lac, long cellTower, long now) {
+		public DuplicateState isRedactable(long lac, long cellTower, long now) {
 			if(isEquals(lac, cellTower)) {
 				eventTime = now;
 				if(now > (firstSeen + ReductionMapHandler.delayBeforeDuplicate)) {
 					firstSeen = now;
-					return RedactableState.NON_REDACTABLE_DELAY_EXPIRED;
+					return DuplicateState.DUPLICATED_WITH_EXPIRED_IDLE_TIME;
 				}
-				return RedactableState.REDACTABLE;
+				return DuplicateState.DUPLICATED;
 			}
-			return RedactableState.NON_REDACTABLE;
+			return DuplicateState.NON_DUPLICATED;
 		}
 		
 		@Override
@@ -56,14 +58,17 @@ public class ImsiHistoryStrongRedact extends ImsiHistory {
 								.add("firstSeen", firstSeen)
 								.toString();
 		}
+
+		public void setLacCell(int lac, int cell) {
+			this.lac = lac;
+			this.cellTower = cell;
+		}
 	}
 	
 	volatile LacCellHistory[] lacCellHistory;
-	volatile public short accessed = 0;
-	volatile private boolean inGeoFence;
 	volatile private boolean firstEventInGeoFence;
 	
-	public ImsiHistoryStrongRedact(long lac, long cellTower, long now) {
+	public ImsiHistoryStrongDedup(long lac, long cellTower, long now) {
 		super(lac, cellTower, now);
 		this.lacCellHistory = new LacCellHistory[2];
 		this.lacCellHistory[0] = new LacCellHistory();
@@ -88,37 +93,50 @@ public class ImsiHistoryStrongRedact extends ImsiHistory {
 	// true -> event is discarded
 	// false -> event is kept
 	//
-	public boolean isReductable(long lac, long cellTower, long now) {
+	public synchronized boolean isDuplicated(long lac, long cellTower, long now) {
 		accessed++;
 		if(now <= eventTime()) {
 			return true;
 		}
 
-		RedactableState reductableState = lacCellHistory[0].isRedactable(lac, cellTower, now);
+		DuplicateState reductableState = lacCellHistory[0].isRedactable(lac, cellTower, now);
 		
-		if(reductableState == RedactableState.NON_REDACTABLE_DELAY_EXPIRED) {
+		if(reductableState == DuplicateState.DUPLICATED_WITH_EXPIRED_IDLE_TIME) {
+			if(firstEventInGeoFence) {
+				lacCellHistory[1].setLacCell(-1 , -1);
+				firstEventInGeoFence = false;
+			}
 			return false;
 		}
-		if(reductableState == RedactableState.REDACTABLE) {
+		if(reductableState == DuplicateState.DUPLICATED) {
 			return true;
 		}
 		
 		reductableState = lacCellHistory[1].isRedactable(lac, cellTower, now);
 
-		if(reductableState == RedactableState.NON_REDACTABLE_DELAY_EXPIRED) {
+		if(reductableState == DuplicateState.DUPLICATED_WITH_EXPIRED_IDLE_TIME) {
+			if(firstEventInGeoFence) {
+				//lacCellHistory[0].setLacCell(-1 , -1);
+				firstEventInGeoFence = false;
+			}
 			return false;
 		}
-		if(reductableState == RedactableState.REDACTABLE) {
+		if(reductableState == DuplicateState.DUPLICATED) {
 			return true;
 		}
 		
-		assignLacCellHistory(lac, cellTower, now); // new assignment
+		int assigned = assignLacCellHistory(lac, cellTower, now); // new assignment
+		if(firstEventInGeoFence) {
+			//lacCellHistory[assigned == 0 ? 1 : 0].setLacCell(-1 , -1);
+			firstEventInGeoFence = false;
+		}
 		return false;
 	}
 	
-	private void assignLacCellHistory(long lac, long cellTower, long now) {
+	private int assignLacCellHistory(long lac, long cellTower, long now) {
 		int nextIndex = lacCellHistory[1].eventTime > lacCellHistory[0].eventTime ? 0 : 1;
 		lacCellHistory[nextIndex].setFields(lac, cellTower, now);
+		return nextIndex;
 	}
 
 	public long previousLac() {
@@ -139,6 +157,21 @@ public class ImsiHistoryStrongRedact extends ImsiHistory {
 				lacCellHistory[1].eventTime :
 				lacCellHistory[0].eventTime;
 	}
+	
+	@Override
+	public long lac() {
+		return firstEventInGeoFence ? -1 : lacCellHistory[0].eventTime > lacCellHistory[1].eventTime ? 
+				lacCellHistory[0].lac :
+				lacCellHistory[1].lac;
+	}
+
+	@Override
+	public long cellTower() {
+		return firstEventInGeoFence ? -1 : lacCellHistory[0].eventTime > lacCellHistory[1].eventTime ? 
+				lacCellHistory[0].cellTower :
+				lacCellHistory[1].cellTower;
+	}
+
 
 	@Override
 	protected void enterGeofence() {
@@ -147,13 +180,14 @@ public class ImsiHistoryStrongRedact extends ImsiHistory {
 
 	@Override
 	protected void followGeofence() {
-		firstEventInGeoFence = false;
+		//firstEventInGeoFence = false;
 	}
 	
 	@Override
 	public String toString() {
 		return MoreObjects.toStringHelper(this)
 							.add("inGeoFence", inGeoFence)
+							.add("firstEventInGeoFence", firstEventInGeoFence)
 							.add("lacCellHistory[0]", lacCellHistory[0])
 							.add("lacCellHistory[1]", lacCellHistory[1])
 							.toString();

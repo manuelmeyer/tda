@@ -86,9 +86,9 @@
 		<property name="inMode" value="true" />
 		<property name="discriminationMode" value="HAS_MINIMUM_LENGTH" />
 	</bean>
-	<bean id="fraudDetectionFilter" class="com.dell.rti4t.xd.filter.FraudDetectionImpl">
+	<!--  bean id="fraudDetectionFilter" class="com.dell.rti4t.xd.filter.FraudDetectionImpl">
 		<property name="fraudDetection" value="${frauddetection:false}" />
-	</bean>
+	</bean -->
 
 	<bean id="countryCodeEnricher" class="com.dell.rti4t.xd.enrich.SubFieldEnricher"/>	
 	
@@ -109,7 +109,7 @@
 		<ref bean="protocolFilter" />
 		<ref bean="imsiWhiteListFilter" />
 		<ref bean="imsiBlackListFilter" />
-		<ref bean="fraudDetectionFilter" />
+		<!-- ref bean="fraudDetectionFilter" / -->
 		<ref bean="lacCellReductorFilter" />
 	</util:list>
 

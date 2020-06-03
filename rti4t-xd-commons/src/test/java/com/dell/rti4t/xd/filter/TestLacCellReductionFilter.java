@@ -5,6 +5,7 @@ import static com.dell.rti4t.xd.testutil.EventTestBuilder.buildEvent;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +17,49 @@ import com.dell.rti4t.xd.filter.DataReductionImpl.ReductionMode;
 public class TestLacCellReductionFilter {
 	
 	static private final Logger LOG = LoggerFactory.getLogger(TestLacCellReductionFilter.class);
+	
+	@Before
+	public void setSimpleRedact() {
+		ReductionMapHandler.useSimpleDedup();
+	}
+	
+	@Test
+	public void canFilterAndFollowExitWithStrongRedact() throws Exception {
+		LacCellReductionFilterImpl underTest = createFilter("lac-cells-100p-20200521.csv");
+		ReductionMapHandler.useStrongDedup();
+
+		DataTransporter dt;
+		dt = buildEvent(1590067404, 24610, 1339412); // enter
+		assertTrue(underTest.accept(dt));
+		assertDtEquals(dt, 1590067404, 24610, 1339412);
+		
+		dt = buildEvent(1590069280, 24610, 1339412); // same
+		assertFalse(underTest.accept(dt));
+		dt = buildEvent(1590069281, 24610, 1339412); // same	
+		assertFalse(underTest.accept(dt));
+		dt = buildEvent(1590069282, 24610, 1339412); // same	
+		assertFalse(underTest.accept(dt));
+		
+		dt = buildEvent(1590069284, 9999, 9999); // exit point
+		assertTrue(underTest.accept(dt));
+		assertDtEquals(dt, 1590069284, 9999, 9999, 1590069282, 24610, 1339412);
+		
+		dt = buildEvent(1590069282, 24610, 1339412); // event in the past
+		assertFalse(underTest.accept(dt));
+
+		dt = buildEvent(1590069299, 24611, 834324); // out of GF
+		assertFalse(underTest.accept(dt));
+		
+		dt = buildEvent(1591069299, 24610, 1339412); // enter
+		assertTrue(underTest.accept(dt));
+		assertDtEquals(dt, 1591069299, 24610, 1339412);
+
+		dt = buildEvent(1591079299, 9999, 0); // exit point
+		assertTrue(underTest.accept(dt));
+		assertDtEquals(dt, 1591079299, 9999, 0, 1591069299, 24610, 1339412);
+
+
+	}
 	
 	@Test
 	public void canFilterAndFollowExitProdIssueDupEnteringCells() throws Exception {
@@ -157,6 +201,7 @@ public class TestLacCellReductionFilter {
 		LacCellReductionFilterImpl underTest = new LacCellReductionFilterImpl();
 		underTest.setDataReductionFilter(dataReduction);
 		underTest.setLacCellFilter(lacCellFilter);
+		underTest.afterPropertiesSet();
 		return underTest;
 	}
 }

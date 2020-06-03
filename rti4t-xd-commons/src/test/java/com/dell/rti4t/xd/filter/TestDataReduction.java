@@ -19,7 +19,6 @@ import com.dell.rti4t.xd.common.ImsiHistory;
 import com.dell.rti4t.xd.common.ReductionMapHandler;
 import com.dell.rti4t.xd.domain.DataTransporter;
 import com.dell.rti4t.xd.filter.DataReductionImpl.ReductionMode;
-import com.dell.rti4t.xd.testutil.EventTestBuilder;
 
 public class TestDataReduction {
 	
@@ -84,103 +83,78 @@ public class TestDataReduction {
 	@Test
 	public void canAcceptWhenLacOrCellChange() throws Exception {
 		DataReductionImpl dataReduction = new DataReductionImpl();
+		dataReduction.setReductionMode(ReductionMode.IMSIS_CHANGE_CELL_ONLY);
 		dataReduction.afterPropertiesSet();
 		
-		DataTransporter dt = new DataTransporter();
-		Map<String, Object> fields = new HashMap<String, Object>();
+		DataTransporter dt;
 		
-		dt.setFields(fields);
-		fields.put("imsi", "imsi");
-		fields.put("lac", "10");
-		fields.put("cellTower", "10");
-		fields.put("timeUTC", "10");
+		dt = buildEvent("imsi", 10, 10, 1000);		
 		assertTrue(dataReduction.accept(dt));
 
-		fields.put("lac", "11");
+		dt = buildEvent("imsi", 11, 10, 2000);		
 		assertTrue(dataReduction.accept(dt));
 	}
 	
 	@Test
 	public void canSeeCellThrottling() throws Exception {
 		DataReductionImpl dataReduction = new DataReductionImpl();
+		dataReduction.setReductionMode(ReductionMode.IMSIS_CHANGE_CELL_ONLY_STRONG_DEDUP);
 		dataReduction.afterPropertiesSet();
 		
-		DataTransporter dt = new DataTransporter();
-		Map<String, Object> fields = new HashMap<String, Object>();
-		dt.setFields(fields);
+		DataTransporter dt;
 		
-		boolean rc;
+		dt = buildEvent(1949, 302, 61554);
+		assertTrue(dataReduction.accept(dt));
 		
-		fields.put("imsi", "imsi");
-		fields.put("lac", "302");
-		fields.put("cellTower", "61554");
-		fields.put("timeUTC", "148110 19 49 000".replaceAll(" ", ""));
+		dt = buildEvent(1955, 307, 42385);
+		assertTrue(dataReduction.accept(dt));
 		
+		dt = buildEvent(1940, 500, 63620); // change of cell but in the past.
+		assertFalse(dataReduction.accept(dt));
+
+		dt = buildEvent(1960, 302, 61554);
+		assertFalse(dataReduction.accept(dt));
+
+		dt = buildEvent(1965, 307, 42385);
+		assertFalse(dataReduction.accept(dt));
+		
+		dt = buildEvent(1970, 400, 42385);
 		assertTrue(dataReduction.accept(dt));
 
-		fields.put("lac", "307");
-		fields.put("cellTower", "42385");
-		fields.put("timeUTC", "148110 19 55 000".replaceAll(" ", ""));
-
+		dt = buildEvent(1975, 307, 42385);
+		assertFalse(dataReduction.accept(dt));
+		
+		dt = buildEvent(1990, 302, 61554);
 		assertTrue(dataReduction.accept(dt));
-
-		fields.put("lac", "307");
-		fields.put("cellTower", "63620");
-		fields.put("timeUTC", "148110 19 40 000".replaceAll(" ", ""));
-		
-		rc = dataReduction.accept(dt);
-		LOG.info("rc0 {} for {}", rc, fields);
-		
-		fields.put("lac", "307");
-		fields.put("cellTower", "42385");
-		fields.put("timeUTC", "148110 19 55 000".replaceAll(" ", ""));
-		
-		rc = dataReduction.accept(dt);
-		LOG.info("rc1 {} for {}", rc, fields);
-		
-		fields.put("lac", "302");
-		fields.put("cellTower", "61554");
-		fields.put("timeUTC", "148110 19 61 000".replaceAll(" ", ""));
-		
-		rc = dataReduction.accept(dt);
-		LOG.info("rc2 {} for {}", rc, fields);
-		
-		fields.put("lac", "307");
-		fields.put("cellTower", "63620");
-		fields.put("timeUTC", "148110 19 37 000".replaceAll(" ", ""));
-		
-		rc = dataReduction.accept(dt);
-		LOG.info("rc3 {} for {}", rc, fields);		
 	}
 	
 	@Test
 	public void canAcceptBasedOnTime() throws Exception {
 		DataReductionImpl dataReduction = new DataReductionImpl();
+		dataReduction.setReductionMode(ReductionMode.IMSIS_CHANGE_CELL);
 		dataReduction.afterPropertiesSet();
 		
 		DataTransporter dt = new DataTransporter();
-		Map<String, Object> fields = new HashMap<String, Object>();
 		
-		dt.setFields(fields);
-		fields.put("imsi", "imsi");
-		fields.put("lac", "10");
-		fields.put("cellTower", "10");
-		fields.put("timeUTC", "10000 00 00 000".replaceAll(" ", ""));
+		dt = buildEvent(1000, 10, 10); // first seen
 		assertTrue(dataReduction.accept(dt));
 
-		fields.put("timeUTC", "10000 00 30 000".replaceAll(" ", ""));
+		dt = buildEvent(1030, 10, 10); // dedup
 		assertFalse(dataReduction.accept(dt));
 		
-		fields.put("timeUTC", "10000 00 50 000".replaceAll(" ", ""));
+		dt = buildEvent(1050, 10, 10);
 		assertFalse(dataReduction.accept(dt));
 
-		fields.put("timeUTC", "10000 00 61 000".replaceAll(" ", ""));
+		dt = buildEvent(1061, 10, 10); // 60s no event, we let it go
 		assertTrue(dataReduction.accept(dt));
 
-		fields.put("timeUTC", "10000 00 91 000".replaceAll(" ", ""));
+		dt = buildEvent(999, 10, 10); // blocked in the past
 		assertFalse(dataReduction.accept(dt));
 
-		fields.put("timeUTC", "10000 0 191 000".replaceAll(" ", ""));
+		dt = buildEvent(1100, 10, 10); // dedup
+		assertFalse(dataReduction.accept(dt));
+
+		dt = buildEvent(1122, 10, 10); // 60s since last 60s, we let it go
 		assertTrue(dataReduction.accept(dt));
 	}
 	
@@ -190,33 +164,26 @@ public class TestDataReduction {
 		dataReduction.setReductionMode(ReductionMode.IMSIS_CHANGE_CELL_ONLY);
 		dataReduction.afterPropertiesSet();
 		
-		DataTransporter dt = new DataTransporter();
-		Map<String, Object> fields = new HashMap<String, Object>();
-		
-		dt.setFields(fields);
-		fields.put("imsi", "imsi");
-		fields.put("lac", "10");
-		fields.put("cellTower", "10");
-		fields.put("timeUTC", "10000 00 00 000".replaceAll(" ", ""));
+		DataTransporter dt = buildEvent(100, 10, 10);
 		assertTrue(dataReduction.accept(dt));
 
-		fields.put("timeUTC", "10000 00 30 000".replaceAll(" ", ""));
+		dt = buildEvent(130, 10, 10);
 		assertFalse(dataReduction.accept(dt));
 		
-		fields.put("timeUTC", "10000 00 61 000".replaceAll(" ", ""));
+		dt = buildEvent(200, 10, 10);
 		assertFalse(dataReduction.accept(dt));
 		
 		// more than 8h after it was last seen on this cell tower event is visible
-		long timeUTC = 100000000000L + (8 * 3600 * 1000) + 1000; 
-		fields.put("timeUTC", String.valueOf(timeUTC));
+		int timeUTC =  200 + (8 * 3600) + 1; 
+		dt = buildEvent(timeUTC, 10, 10);
 		assertTrue(dataReduction.accept(dt));
 		
-		timeUTC += 2000; // then quiet again
-		fields.put("timeUTC", String.valueOf(timeUTC));
+		timeUTC += 2; // then quiet again
+		dt = buildEvent(timeUTC, 10, 10);
 		assertFalse(dataReduction.accept(dt));
 		
-		timeUTC += (8 * 3600 * 1000); // then visible after 8h
-		fields.put("timeUTC", String.valueOf(timeUTC));
+		timeUTC += (8 * 3600); // then visible after 8h
+		dt = buildEvent(timeUTC, 10, 10);
 		assertTrue(dataReduction.accept(dt));
 	}
 	
@@ -228,22 +195,22 @@ public class TestDataReduction {
 		
 		DataTransporter dt = new DataTransporter();
 		
-		dt = buildEvent("imsi", 10, 10, 1000);
+		dt = buildEvent("imsi", 1000, 10, 10);
 		assertTrue(dataReduction.accept(dt));
 		ImsiHistory imsiHistory = ReductionMapHandler.getImsiHistory("imsi");
 
-		dt = buildEvent("imsi", 10, 10, 1030);
+		dt = buildEvent("imsi", 1030, 10, 10);
 		assertFalse(dataReduction.accept(dt));
 		imsiHistory.isGeoFence(true);
 		
-		dt = buildEvent("imsi", 11, 11, 1030);
+		dt = buildEvent("imsi", 1040, 11, 11);
 		imsiHistory.isGeoFence(true);
 		assertTrue(dataReduction.accept(dt));
 		
 		LOG.info("Imsi history {}", imsiHistory);
-		assertEquals(imsiHistory.lac, 11);
-		assertEquals(imsiHistory.cellTower, 11);
-		assertEquals(imsiHistory.previousLac, 10);
-		assertEquals(imsiHistory.previousCellTower, 10);
+		assertEquals(imsiHistory.lac(), 11);
+		assertEquals(imsiHistory.cellTower(), 11);
+		assertEquals(imsiHistory.previousLac(), 10);
+		assertEquals(imsiHistory.previousCellTower(), 10);
 	}
 }

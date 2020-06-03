@@ -5,46 +5,41 @@ import java.io.Serializable;
 @SuppressWarnings("serial")
 public abstract class ImsiHistory implements Serializable {
 	
-	volatile public short accessed = 0;
-	volatile public long eventTime;
-	volatile public long lac;
-	volatile public long cellTower;
-	volatile public long firstSeen;
-	volatile private boolean inGeoFence;
-	volatile public long previousLac = -1;
-	volatile public long previousCellTower = -1;
-	volatile public long previousTimeUTC = -1;
+	volatile protected boolean inGeoFence;
+	volatile public short accessed;
 	
-	public ImsiHistory(long lac, long cellTower, long now) {
-	}
-	
-	public abstract boolean isTimeValid(long time);
-	
-	public abstract boolean isReductable(long lac, long cellTower, long now);
+	public abstract long previousLac();
+	public abstract long previousCellTower();
+	public abstract long previousTimeUTC();
+
+	public abstract boolean isTimeValid(long time);	
+	public abstract boolean isDuplicated(long lac, long cellTower, long now);
 		
 	protected abstract void enterGeofence();
-	
 	protected abstract void followGeofence();
-
+	
+	public ImsiHistory(long lac, long cellTower, long now) {
+		inGeoFence = true;
+		accessed = 0;
+	}
+	
 	public void isGeoFence(boolean isInGeofence) {	
 		if(isInGeofence) {
 			if(!inGeoFence) {
 				inGeoFence = true;
 				enterGeofence();
-//				previousLac = -1;
-//				previousCellTower = -1;
-//				previousTimeUTC = -1;
 				return;
 			}
 		}
-		followGeofence();
-//		previousLac = lac;
-//		previousCellTower = cellTower;
-//		previousTimeUTC = eventTime;
 		inGeoFence = isInGeofence;
+		followGeofence();
 	}
 	
 	public boolean inGeoFence() {
 		return inGeoFence;
 	}
+	
+	public abstract long lac();
+	public abstract long cellTower();
+	
 }

@@ -97,7 +97,7 @@ public class FraudDetectionImpl implements EventFilter, InitializingBean {
 	
 	private Map<String, FraudInformation> imsiToFraud;
 	private boolean isFraudDetectionOn = false;
-	private LockerByValue lockerByValue = LockerByValue.buildLocker("imsi");
+	//private LockerByValue lockerByValue = LockerByValue.buildLocker("imsi");
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
@@ -141,7 +141,7 @@ public class FraudDetectionImpl implements EventFilter, InitializingBean {
 		
 		FraudInformation storeFraud = null;
 		
-		synchronized(lockerByValue.lock(imsi)) {
+		//synchronized(lockerByValue.lock(imsi)) {
 			storeFraud = imsiToFraud.get(imsi);
 			if (storeFraud == null) {
 				imsiToFraud.put(imsi, new FraudInformation(msisdn, imei));
@@ -159,7 +159,7 @@ public class FraudDetectionImpl implements EventFilter, InitializingBean {
 				imsiToFraud.put(imsi, storeFraud.assignIfNotNull(msisdn, imei));
 			}
 			return isFraud;
-		}
+		//}
 	}
 
 	private boolean nullField(String field) {

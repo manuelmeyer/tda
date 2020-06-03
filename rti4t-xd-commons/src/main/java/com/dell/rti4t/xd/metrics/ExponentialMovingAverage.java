@@ -27,7 +27,7 @@ package com.dell.rti4t.xd.metrics;
 @SuppressWarnings("PMD")
 public class ExponentialMovingAverage {
 
-	private volatile int count;
+	private volatile long count;
 
 	private volatile double weight;
 
@@ -83,7 +83,7 @@ public class ExponentialMovingAverage {
 	/**
 	 * @return the number of measurements recorded
 	 */
-	public int getCount() {
+	public long getCount() {
 		return count;
 	}
 

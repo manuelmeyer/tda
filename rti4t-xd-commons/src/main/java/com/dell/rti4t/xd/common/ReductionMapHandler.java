@@ -19,9 +19,17 @@ public class ReductionMapHandler {
 	static private int initialCapacity = 500_000;
 	static private long expireAfterInSec = 7201L;
 	static private int concurrencyLevel = 32;
-	static protected boolean useSimpleRedact = true;
+	static protected boolean useSimpleDedup = true;
 	
 	static private Cache<String, ImsiHistory> ismiHistoryMap = emptyCache();
+	
+	static public void useSimpleDedup() {
+		useSimpleDedup = true;
+	}
+	
+	static public void useStrongDedup() {
+		useSimpleDedup = false;
+	}
 	
 	static public void setDelayBeforeDuplicate(int delta) {
 		ReductionMapHandler.delayBeforeDuplicate = delta;
@@ -42,7 +50,10 @@ public class ReductionMapHandler {
 				.expireAfterAccess(expireAfterInSec, TimeUnit.SECONDS)
 				//.concurrencyLevel(concurrencyLevel)
 				.build();
-		LOG.info("Creating a cache of initial capacity {}, concurrency level {}, expire after {} sec(s)", 
+		LOG.info("Creating a cache for {} dedup, of initial capacity {}, unaccessed data expires after {} sec(s)",
+									useSimpleDedup 
+											? "simple" 
+											: " strong",
 									initialCapacity,
 									concurrencyLevel,
 									expireAfterInSec);
@@ -70,15 +81,16 @@ public class ReductionMapHandler {
 		return false;
 	}
 
-	public static void newImsiHistory(String imsi, long lac, long cellTower, long now) {
-		ImsiHistory newEntry = useSimpleRedact 
-				? new ImsiHistorySimpleRedact(lac, cellTower, now)
-				: new ImsiHistoryStrongRedact(lac, cellTower, now);
+	public static ImsiHistory newImsiHistory(String imsi, long lac, long cellTower, long now) {
+		ImsiHistory newEntry = useSimpleDedup 
+				? new ImsiHistorySimpleDedup(lac, cellTower, now)
+				: new ImsiHistoryStrongDedup(lac, cellTower, now);
 		newEntry.isGeoFence(true);
 		ismiHistoryMap.put(imsi, newEntry);
+		return newEntry;
 	}
 
-	public static boolean isReductable(ImsiHistory history, long lac, long cellTower, long now) {
-		return history.isReductable(lac, cellTower, now);
+	public static boolean isDuplicated(ImsiHistory history, long lac, long cellTower, long now) {
+		return history.isDuplicated(lac, cellTower, now);
 	}
 }

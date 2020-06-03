@@ -22,7 +22,7 @@ package com.dell.rti4t.xd.metrics;
  */
 public class Statistics {
 
-	private final int count;
+	private final long count;
 
 	private final double min;
 
@@ -33,7 +33,7 @@ public class Statistics {
 	private final double standardDeviation;
 
 
-	public Statistics(int count, double min, double max, double mean, double standardDeviation) {
+	public Statistics(long count, double min, double max, double mean, double standardDeviation) {
 		this.count = count;
 		this.min = min;
 		this.max = max;
@@ -42,7 +42,7 @@ public class Statistics {
 	}
 
 
-	public int getCount() {
+	public long getCount() {
 		return count;
 	}
 

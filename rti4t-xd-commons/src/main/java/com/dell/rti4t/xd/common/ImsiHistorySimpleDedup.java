@@ -6,11 +6,10 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.MoreObjects;
 
 @SuppressWarnings("serial")
-public class ImsiHistorySimpleRedact extends ImsiHistory {
+public class ImsiHistorySimpleDedup extends ImsiHistory {
 	
-	static private final Logger LOG = LoggerFactory.getLogger(ImsiHistorySimpleRedact.class);
+	static private final Logger LOG = LoggerFactory.getLogger(ImsiHistorySimpleDedup.class);
 	
-	volatile public short accessed = 0;
 	volatile public long eventTime;
 	volatile public long lac;
 	volatile public long cellTower;
@@ -20,7 +19,7 @@ public class ImsiHistorySimpleRedact extends ImsiHistory {
 	volatile public long previousCellTower = -1;
 	volatile public long previousTimeUTC = -1;
 	
-	public ImsiHistorySimpleRedact(long lac, long cellTower, long now) {
+	public ImsiHistorySimpleDedup(long lac, long cellTower, long now) {
 		super(lac, cellTower, now);
 		this.lac = lac;
 		this.cellTower = cellTower;
@@ -33,7 +32,7 @@ public class ImsiHistorySimpleRedact extends ImsiHistory {
 		return time > eventTime;
 	}
 	
-	public boolean isReductable(long lac, long cellTower, long now) {
+	public synchronized boolean isDuplicated(long lac, long cellTower, long now) {
 		accessed++;
 		if(now <= eventTime) {
 			return true;
@@ -70,6 +69,31 @@ public class ImsiHistorySimpleRedact extends ImsiHistory {
 		previousLac = lac;
 		previousCellTower = cellTower;
 		previousTimeUTC = eventTime;
+	}
+	
+	@Override
+	public long previousLac() {
+		return previousLac;
+	}
+
+	@Override
+	public long previousCellTower() {
+		return previousCellTower;
+	}
+
+	@Override
+	public long previousTimeUTC() {
+		return previousTimeUTC;
+	}
+
+	@Override
+	public long lac() {
+		return lac;
+	}
+
+	@Override
+	public long cellTower() {
+		return cellTower;
 	}
 	
 	@Override
