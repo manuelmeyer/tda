@@ -57,8 +57,6 @@ public class TestLacCellReductionFilter {
 		dt = buildEvent(1591079299, 9999, 0); // exit point
 		assertTrue(underTest.accept(dt));
 		assertDtEquals(dt, 1591079299, 9999, 0, 1591069299, 24610, 1339412);
-
-
 	}
 	
 	@Test

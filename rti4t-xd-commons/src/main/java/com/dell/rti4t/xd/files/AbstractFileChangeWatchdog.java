@@ -22,7 +22,6 @@ public class AbstractFileChangeWatchdog {
 					try {
 						Thread.sleep(frequency);
 						lastModified = FileUtils.lastModified(filePath);
-						//LOG.info("Checking {} last modified is {} current is {}", filePath, lastModified, currentModified);
 						if(lastModified > currentModified) {
 							currentModified = lastModified;
 							LOG.info("File {} has changed - calling callback", filePath);

@@ -26,7 +26,7 @@ public class DataReductionImpl implements EventFilter, InitializingBean {
 		 * ...
 		 * tn, l1, c1, with t0 < t1 < ... < tn, will only let pass t0, l1, c1
 		 * 
-		 * Strong dedup is to avoid letting pass too much events whem an imsi bounces back and forth 
+		 * Strong dedup is to avoid letting pass too much events when an imsi bounces back and forth 
 		 * from a cell tower to another identical cell tower.
 		 * Considering t0 < t1 < ... < tn, we can have a row of <time, lac, cell> events like:
 		 * 

@@ -35,13 +35,11 @@
 		<property name="inMode" value="true" />
 		<property name="inOrOutFilePath" value="${imsiwhitelistfile:}" />
 		<property name="refresh" value="${refresh:60000}" />
-		<property name="useOffHeapSet" value="true" />
 	</bean>
 	<bean id="imsiBlackListFilter" class="com.dell.rti4t.xd.filter.InOrOutListBasedFilterImpl">
 		<property name="inMode" value="false" />
 		<property name="inOrOutFilePath" value="${imsiblacklistfile:}" />
 		<property name="refresh" value="${refresh:60000}" />
-		<property name="useOffHeapSet" value="true" />
 	</bean>
 	<bean id="lacCellFilter" class="com.dell.rti4t.xd.filter.LacCellFilterImpl">
 		<property name="lacCellFilePath" value="${laccelllistfile:}" />

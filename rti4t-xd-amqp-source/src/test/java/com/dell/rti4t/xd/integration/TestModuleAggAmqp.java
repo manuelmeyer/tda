@@ -39,7 +39,7 @@ public class TestModuleAggAmqp {
 	private void run() throws Exception {
 		LOG.info("Loading test data");
 		//final String payload = loadTestData("networkrail.simple"); // sample.all.protocols");
-		final String payload = loadTestData("sample.all.protocols");
+		final String payload = loadTestData("networkrail.simple");
 		final Channel channel = createAMQPChannel();
 		
 		final int totalMsg = 100000;

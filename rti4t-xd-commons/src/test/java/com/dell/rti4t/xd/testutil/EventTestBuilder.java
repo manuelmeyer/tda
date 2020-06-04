@@ -21,6 +21,10 @@ public class EventTestBuilder {
 		return dt;
 	}
 	
+	public static DataTransporter buildEvent(String imsi) {
+		return buildEvent(imsi, 0, 0, 0);
+	}
+	
 	public static DataTransporter generateEvent() {
 		return buildEvent(generateString(), generateAbsInt(), generateAbsInt(), generateAbsInt());
 	}
