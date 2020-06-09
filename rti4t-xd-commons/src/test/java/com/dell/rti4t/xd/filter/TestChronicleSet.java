@@ -4,6 +4,9 @@ import java.util.Set;
 
 import net.openhft.chronicle.set.ChronicleSetBuilder;
 
+import org.junit.Ignore;
+
+@Ignore
 public class TestChronicleSet {
 	
 	//@Test just to see an exception is thrown is the set is under sized.

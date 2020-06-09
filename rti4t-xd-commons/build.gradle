@@ -47,7 +47,7 @@ dependencies {
 	compile project(':rti4t-xd-domain')
 	compile "org.springframework.xd:spring-xd-module-plugin:1.1.2.RELEASE"
 	compile "org.springframework:spring-core:4.1.4.RELEASE"
-	compile "com.google.guava:guava:21.0"
+	//compile "com.google.guava:guava:16.0.1"
 	compile "joda-time:joda-time:2.5"
 	compile "net.openhft:chronicle-map:2.4.17"
 	compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.13'

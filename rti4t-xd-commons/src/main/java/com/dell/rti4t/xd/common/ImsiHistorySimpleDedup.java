@@ -3,7 +3,7 @@ package com.dell.rti4t.xd.common;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.MoreObjects;
+import com.dell.rti4t.xd.utils.MoreObjects;
 
 @SuppressWarnings("serial")
 public class ImsiHistorySimpleDedup extends ImsiHistory {

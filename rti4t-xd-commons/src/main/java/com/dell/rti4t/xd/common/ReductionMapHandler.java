@@ -21,7 +21,7 @@ public class ReductionMapHandler {
 	static private int concurrencyLevel = 32;
 	static protected boolean useSimpleDedup = true;
 	
-	static private Cache<String, ImsiHistory> ismiHistoryMap = emptyCache();
+	static private Cache<String, ImsiHistory> ismiHistoryMap;
 	
 	static public void useSimpleDedup() {
 		useSimpleDedup = true;
@@ -35,10 +35,6 @@ public class ReductionMapHandler {
 		ReductionMapHandler.delayBeforeDuplicate = delta;
 	}
 	
-	private static Cache<String, ImsiHistory> emptyCache() {
-		return CacheBuilder.newBuilder().build(); // default cache.
-	}
-
 	static public void setInitialCapacity(int initialCapacity) {
 		ReductionMapHandler.initialCapacity = initialCapacity;
 	}

@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -33,8 +32,8 @@ public class TestLacAndCellFilter {
 	@Test
 	public void canFilterOnInvalidValues() {
 		LacCellFilterImpl filter = new LacCellFilterImpl();
-		assertFalse(filter.accept(EventTestBuilder.buildEvent(0, 0, 1000000)));
-		assertFalse(filter.accept(EventTestBuilder.buildEvent(65535, 65535, 1000000)));
+		assertFalse(filter.accept(EventTestBuilder.buildEvent(0, 0, 0)));
+		assertFalse(filter.accept(EventTestBuilder.buildEvent(0, 65535, 65535)));
 	}
 
 	
@@ -55,7 +54,7 @@ public class TestLacAndCellFilter {
 		
 		Map<String, Set<String>> lacCellsStore = filter.accessLacCellsStore();
 		assertNotNull(lacCellsStore);
-		assertEquals(3, lacCellsStore.size());
+		assertEquals(4, lacCellsStore.size());
 		
 		assertNull(lacCellsStore.get("10000"));
 		

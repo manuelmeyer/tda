@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class CSVToObjectParser {
-	static private final Logger logger = LoggerFactory.getLogger(CSVToObjectParser.class);
+	static private final Logger LOG = LoggerFactory.getLogger(CSVToObjectParser.class);
 
 	private static final int START_OF_VALUE = 0;
 	private static final int IN_MAP = 1;
@@ -29,7 +29,7 @@ public class CSVToObjectParser {
 
 	static private ThreadLocal<StringBuilder> threadLocalValue = new ThreadLocal<StringBuilder>();
 	static private ThreadLocal<StringBuilder> threadLocalName = new ThreadLocal<StringBuilder>();
-
+	
 	/**
 	 * Give a string will parse it placing sets within {} in a hashmap and other
 	 * values in the list
@@ -107,8 +107,8 @@ public class CSVToObjectParser {
 					currentList.add("");
 				}
 				if (currentList.size() > 0) {
-					if (logger.isDebugEnabled()) {
-						logger.debug("CR found, adding a list of {} to the list of list", currentList.size());
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("CR found, adding a list of {} to the list of list", currentList.size());
 					}
 					currentListOfList.add(currentList);
 				}
@@ -138,9 +138,9 @@ public class CSVToObjectParser {
 		if (currentList.size() > 0) {
 			currentListOfList.add(currentList);
 		}
-		if (logger.isDebugEnabled()) {
+		if (LOG.isDebugEnabled()) {
 			for (int index = 0; index < currentListOfList.size(); index++) {
-				logger.debug("List {}/{} contains {} elts", index, currentListOfList.size(),
+				LOG.debug("List {}/{} contains {} elts", index, currentListOfList.size(),
 						currentListOfList.get(index)
 								.size());
 			}

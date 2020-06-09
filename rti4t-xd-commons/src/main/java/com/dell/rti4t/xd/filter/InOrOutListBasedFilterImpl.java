@@ -6,6 +6,8 @@ import static reactor.util.StringUtils.isEmpty;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -26,7 +28,7 @@ public class InOrOutListBasedFilterImpl extends InOrOutBaseFilter {
 	static private final Logger LOG = LoggerFactory.getLogger(InOrOutListBasedFilterImpl.class);
 
 	private String inOrOutFilePath;
-	private VersionedSet<String> inOrOutSet;
+	private Set<String> inOrOutSet;
 	private int frequency;
 	int totalEntries;
 	
@@ -56,16 +58,15 @@ public class InOrOutListBasedFilterImpl extends InOrOutBaseFilter {
 		if(!isEmpty(inOrOutFilePath)) {
 			inOrOutSet = new VersionedSet<String>();
 			LOG.info("Filter for '{}' is '{}'", inOrOutFilePath, (in == true ? "whitelist" : "blacklist"));
-			loadFileInfo();
+			inOrOutSet = loadFileInfo();
 			startFileWatchDog();
 		}
 	}
 	
-	private void loadFileInfo() throws Exception {
+	private Set<String> loadFileInfo() throws Exception {
+        Set<String> inOrOutSet = new HashSet<String>();
+
 		Stopwatch stopWatch = Stopwatch.createStarted();
-		inOrOutSet.incrementVersion();
-		
-		int formerCount = inOrOutSet.size();
 		
 		File inOrOutFile = fileFromPath(inOrOutFilePath);
 		LOG.info("InMode is '{}', field is '{}'", in, filterField);
@@ -80,16 +81,12 @@ public class InOrOutListBasedFilterImpl extends InOrOutBaseFilter {
 			}
 		}
 		
-		int newCount = inOrOutSet.size();
-		int pruned = inOrOutSet.prune();
-		
 		stopWatch.stop();
 		
-		LOG.info("Total read {}, added {}, removed {} in {} ms", 
+		LOG.info("Total read {} in {} ms", 
 				inOrOutSet.size(), 
-				newCount - formerCount,
-				pruned,
 				stopWatch.elapsed(TimeUnit.MILLISECONDS));
+		return inOrOutSet;
 	}
 	
 	private void startFileWatchDog() {
@@ -97,7 +94,7 @@ public class InOrOutListBasedFilterImpl extends InOrOutBaseFilter {
 			@Override
 			public void onFileChange() {
 				try {
-					loadFileInfo();
+					inOrOutSet = loadFileInfo();
 				} catch(InterruptedException ie) {
 					return;
 				} catch(Exception e) {

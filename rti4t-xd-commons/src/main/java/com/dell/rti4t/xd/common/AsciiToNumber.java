@@ -25,6 +25,6 @@ public abstract class AsciiToNumber {
 			LOG.error("time {} too short to be converted, assuming it is 0", time);
 			return 0;
 		}
-		return atol(time.substring(0, time.length() - 3));
+		return atol(time) / 1000;
 	}
 }

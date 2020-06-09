@@ -20,7 +20,7 @@ public class ObjectListToDataTransporterImpl implements ObjectListToDataTranspor
 	private List<String> names = new ArrayList<String>();
 	private String filterField;
 	private String defaultFilterValue = "data";
-
+	
 	@SuppressWarnings("unchecked")
 	@Override
 	public DataTransporter buildFromObjectList(List<Object> objects) {
