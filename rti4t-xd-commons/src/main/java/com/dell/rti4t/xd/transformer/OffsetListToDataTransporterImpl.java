@@ -12,35 +12,41 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
-import com.dell.rti4t.xd.csv.CSVToObjectParser;
+import com.dell.rti4t.xd.csv.CSVToOffsetParser;
+import com.dell.rti4t.xd.csv.CSVToOffsetParser.Offset;
 import com.dell.rti4t.xd.domain.DataTransporter;
 
-public class ObjectListToDataTransporterImpl implements DataInputParser<Object, String> {
+public class OffsetListToDataTransporterImpl implements DataInputParser<Offset, byte[]> {
 	
-	private static final Logger LOG = LoggerFactory.getLogger(ObjectListToDataTransporterImpl.class);
+	private static final Logger LOG = LoggerFactory.getLogger(OffsetListToDataTransporterImpl.class);
+	
 	private List<String> names = new ArrayList<String>();
 	private String filterField;
 	private String defaultFilterValue = "data";
 	
 	@Override
-	public List<List<Object>> parse(String input) {
-		return CSVToObjectParser.parse(input);
+	public List<List<Offset>> parse(byte[] input) {
+		return CSVToOffsetParser.parse(input);
 	}
+
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public DataTransporter buildFromList(List<Object> objects) {
+	public DataTransporter buildFromList(List<Offset> objects) {
 		Map<String, Object>  map = new HashMap<String, Object>();
+		
 		int nameSize = names.size();
 		for(int index = 0; index < nameSize; index++) {
 			String name = names.get(index);
-			Object value = objects.get(index);
-			if(value instanceof Map) {
-				for(Map.Entry<String, Object> entry : ((Map<String, Object>)value).entrySet()) {
-					map.put(name + "." + entry.getKey(), entry.getValue());
+			if(!name.startsWith("-")) {
+				Object value = objects.get(index).extractContent();
+				if(value instanceof Map) {
+					for(Map.Entry<String, Object> entry : ((Map<String, Object>)value).entrySet()) {
+						map.put(name + "." + entry.getKey(), entry.getValue());
+					}
+				} else {
+					map.put(name, value);
 				}
-			} else {
-				map.put(name, value);
 			}
 		}
 		return new DataTransporter(map, filterValueFromMap(map));

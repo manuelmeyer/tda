@@ -9,18 +9,29 @@ import com.dell.rti4t.xd.domain.DataTransporter;
 import com.dell.rti4t.xd.eventhandler.AbstractDataTransporterEventHandler;
 import com.dell.rti4t.xd.filter.EventFilter;
 import com.dell.rti4t.xd.jmx.VFROInputOutputMetrics;
+import com.dell.rti4t.xd.transformer.DataInputParser;
 import com.dell.rti4t.xd.transformer.MapFieldReducer;
-import com.dell.rti4t.xd.transformer.ObjectListToDataTransporter;
+import com.dell.rti4t.xd.transformer.ListToDataTransporter;
 import com.google.common.util.concurrent.AtomicLongMap;
 
 public class CellTowerStatsEventHandler extends AbstractDataTransporterEventHandler {
 	
+	public CellTowerStatsEventHandler(String handlerName,
+			VFROInputOutputMetrics inputOutputMetrics, Lifecycle lifeCycle,
+			MessageChannel outputChannel, int batchSize, int batchTimeout,
+			MapFieldReducer reducer, DataInputParser objectTransformer,
+			List eventFilters) {
+		super(handlerName, inputOutputMetrics, lifeCycle, outputChannel, batchSize,
+				batchTimeout, reducer, objectTransformer, eventFilters);
+		// TODO Auto-generated constructor stub
+	}
+
 	private AtomicLongMap<String> cellIn;
 	private AtomicLongMap<String> cellOut;
 
-	public CellTowerStatsEventHandler(String handlerName, VFROInputOutputMetrics inputOutputMetrics, Lifecycle lifeCycle, MessageChannel outputChannel, int batchSize, int batchTimeout, MapFieldReducer reducer, ObjectListToDataTransporter transformer, List<EventFilter> eventFilters) {
-		super(handlerName, inputOutputMetrics, lifeCycle, outputChannel, batchSize, batchTimeout, reducer, transformer, eventFilters);
-	}
+//	public CellTowerStatsEventHandler(String handlerName, VFROInputOutputMetrics inputOutputMetrics, Lifecycle lifeCycle, MessageChannel outputChannel, int batchSize, int batchTimeout, MapFieldReducer reducer, ListToDataTransporter transformer, List<EventFilter> eventFilters) {
+////		super(handlerName, inputOutputMetrics, lifeCycle, outputChannel, batchSize, batchTimeout, reducer, transformer, eventFilters);
+//	}
 
 	@Override
 	public void flushOnTimeout() {

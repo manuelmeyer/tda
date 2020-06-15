@@ -30,7 +30,7 @@ public class FileChecker {
 		while((line = reader.readLine()) != null) {
 			List<List<Object>> parseds = CSVToObjectParser.parse(line);
 			for(List<Object> parsed : parseds) {
-				DataTransporter dt = oldtd.buildFromObjectList(parsed);
+				DataTransporter dt = oldtd.buildFromList(parsed);
 				if(reduction.accept(dt)) {
 					System.out.println(reducer.transform(dt));
 				}

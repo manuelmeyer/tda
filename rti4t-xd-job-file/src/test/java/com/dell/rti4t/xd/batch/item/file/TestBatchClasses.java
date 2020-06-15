@@ -13,7 +13,7 @@ import com.dell.rti4t.xd.batch.item.file.DataTranporterWriterAggregator;
 import com.dell.rti4t.xd.batch.item.file.DataTransporterLineMapper;
 import com.dell.rti4t.xd.domain.DataTransporter;
 import com.dell.rti4t.xd.transformer.MapFieldReducerImpl;
-import com.dell.rti4t.xd.transformer.ObjectListToDataTransporterImpl;
+import com.dell.rti4t.xd.transformer.OffsetListToDataTransporterImpl;
 import com.dell.rti4t.xd.utils.FileUtils;
 
 public class TestBatchClasses {
@@ -64,7 +64,7 @@ public class TestBatchClasses {
 		ListDelimitedLineTokenizer tokenizer = new ListDelimitedLineTokenizer();
 		tokenizer.setDelimiter("|");
 		
-		ObjectListToDataTransporterImpl toDataTransporter = new ObjectListToDataTransporterImpl();
+		OffsetListToDataTransporterImpl toDataTransporter = new OffsetListToDataTransporterImpl();
 		toDataTransporter.setFieldNames(new String[] {"A", "B", "C", "D"});
 		
 		DataTransporterLineMapper lineMapper = new DataTransporterLineMapper();

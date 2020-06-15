@@ -9,7 +9,6 @@ import java.io.FileReader;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -154,9 +153,6 @@ public class LacCellFilterImpl implements EventFilter, InitializingBean {
 		}
 		long t1 = System.currentTimeMillis();
 		LOG.info("Loaded {} lacs in {} ms", lacCellsStore.size(), (t1 - t0));
-		for(Entry<String, Set<String>> entry : lacCellsStore.entrySet()) {
-			LOG.info("{}={}", entry.getKey(), entry.getValue());
-		}
 		return lacCellsStore;
 	}
 

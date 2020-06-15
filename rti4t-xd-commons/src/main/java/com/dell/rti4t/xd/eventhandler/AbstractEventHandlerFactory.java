@@ -5,19 +5,17 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.PostConstruct;
-import javax.management.MBeanServer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.Lifecycle;
 import org.springframework.messaging.MessageChannel;
 
 import com.dell.rti4t.xd.enrich.EventEnricher;
 import com.dell.rti4t.xd.filter.EventFilter;
 import com.dell.rti4t.xd.jmx.VFROInputOutputMetrics;
+import com.dell.rti4t.xd.transformer.DataInputParser;
 import com.dell.rti4t.xd.transformer.MapFieldReducer;
-import com.dell.rti4t.xd.transformer.ObjectListToDataTransporter;
 
 abstract public class AbstractEventHandlerFactory implements DataTransporterEventHandlerFactory {
 	
@@ -30,7 +28,7 @@ abstract public class AbstractEventHandlerFactory implements DataTransporterEven
 
 	protected int batchSize = 2048;
 	protected int batchTimeout = 5000;
-	protected ObjectListToDataTransporter transformer;
+	protected DataInputParser transformer;
 	protected MapFieldReducer reducer;
 	protected String streamName;
 	private VFROInputOutputMetrics inputOutputMetrics;
@@ -60,7 +58,7 @@ abstract public class AbstractEventHandlerFactory implements DataTransporterEven
 		this.streamName = streamName;
 	}
 
-	public void setDataTransporterHandler(ObjectListToDataTransporter transformer) {
+	public void setDataTransporterHandler(DataInputParser transformer) {
 		this.transformer = transformer;
 	}
 
@@ -142,7 +140,7 @@ abstract public class AbstractEventHandlerFactory implements DataTransporterEven
 			int batchSize, 
 			int batchTimeout, 
 			MapFieldReducer reducer, 
-			ObjectListToDataTransporter transformer, 
+			DataInputParser transformer, 
 			List<EventFilter> eventFilters, 
 			List<EventEnricher> enrichers);
 

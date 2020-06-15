@@ -10,8 +10,8 @@ import com.dell.rti4t.xd.eventhandler.AbstractEventHandlerFactory;
 import com.dell.rti4t.xd.eventhandler.DataTransporterEventHandler;
 import com.dell.rti4t.xd.filter.EventFilter;
 import com.dell.rti4t.xd.jmx.VFROInputOutputMetrics;
+import com.dell.rti4t.xd.transformer.DataInputParser;
 import com.dell.rti4t.xd.transformer.MapFieldReducer;
-import com.dell.rti4t.xd.transformer.ObjectListToDataTransporter;
 
 public class DataTransporterAccumulatorEventHandlerFactory extends AbstractEventHandlerFactory {
 	
@@ -23,7 +23,7 @@ public class DataTransporterAccumulatorEventHandlerFactory extends AbstractEvent
 									int batchSize, 
 									int batchTimeout, 
 									MapFieldReducer reducer, 
-									ObjectListToDataTransporter transformer, 
+									DataInputParser transformer, 
 									List<EventFilter> eventFilters, 
 									List<EventEnricher> enrichers) {
 		LOG.debug("Creating new AccumulatorEventHandler for {}", handlerName);

@@ -77,7 +77,7 @@ public class TestModuleAggAmqp {
 	}
 	
 	
-	private void runRandom(String[] args) throws Exception {
+	protected void runRandom(String[] args) throws Exception {
 		buildImsiInList();
 		buildImsiNotInList();
 		writeImsiInList();
@@ -142,11 +142,9 @@ public class TestModuleAggAmqp {
 		return getFromSet(setImsiInList, count);
 	}
 
-
 	private List<String> getOutOfList(int count) {
 		return getFromSet(setImsiNotInList, count);
 	}
-
 
 	private List<String> getFromSet(Set<String> imsiSet, int count) {
 		List<String> testList = Lists.newArrayList();
@@ -161,7 +159,6 @@ public class TestModuleAggAmqp {
 		}
 		return testList;
 	}
-
 
 	private void loadRefDataLacCells() throws Exception {
 		SetMultimap<String, String> multimapSet = HashMultimap.create();
@@ -214,7 +211,7 @@ public class TestModuleAggAmqp {
 		LOG.info("Total imsi in test {}", setImsiNotInList.size());
 	}
 	
-	public static void main(String[] args) throws Exception {
+	protected static void createImsiFile() throws Exception {
 //		BufferedWriter fileWriter = new BufferedWriter(new FileWriter("/tmp/wl", false));
 //		Random random = new Random();
 //		for(int index = 0; index < 20_000_000; index++) {
@@ -222,8 +219,11 @@ public class TestModuleAggAmqp {
 //		}
 //		fileWriter.flush();
 //		fileWriter.close();
-		new TestModuleAggAmqp().runRandom(args);
-		//new TestModuleAggAmqp().run();
+
+	}
+	
+	public static void main(String[] args) throws Exception {
+		new TestModuleAggAmqp().run();
 		System.exit(0);
 	}
 
@@ -233,8 +233,8 @@ public class TestModuleAggAmqp {
 		final String payload = loadTestData("sample.all.protocols"); //networkrail.simple");
 		final Channel channel = createAMQPChannel();
 		
-		final int totalMsg = 100000;
-		final int delay = 25;
+		final int totalMsg = 100_000;
+		final int delay = 10;
 		
 		sendMessages(payload, totalMsg, channel, delay);
 	}

@@ -57,7 +57,8 @@ public class CSVToObjectParser {
 		List<List<Object>> currentListOfList = new ArrayList<List<Object>>(NO_OF_EVENTS);
 		List<Object> currentList = new ArrayList<Object>(NO_OF_FIELDS);
 
-		for (int index = 0; index < input.length(); index++) {
+		int length = input.length();
+		for (int index = 0; index < length; index++) {
 			char c = input.charAt(index);
 			switch (c) {
 			case ',':
@@ -129,7 +130,7 @@ public class CSVToObjectParser {
 		} // end of for loop
 
 		// check if string ends with an empty value
-		if (input.charAt(input.length() - 1) == ',') {
+		if (input.charAt(length - 1) == ',') {
 			currentList.add("");
 		}
 		if (value.length() > 0) {

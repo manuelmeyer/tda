@@ -11,7 +11,7 @@
 	<int:channel id="output" />
 
 	<bean id="transporterHandler"
-		class="com.dell.rti4t.xd.transformer.ObjectListToDataTransporterImpl">
+		class="com.dell.rti4t.xd.transformer.OffsetListToDataTransporterImpl">
 		<property name="fieldNamesDefinitionFile" value="${fieldnamesdefinitionfile}" />
 		<property name="filterField" value="${filterfield:}" />
 		<property name="defaultFilterValue" value="${defaultfiltervalue:}" />

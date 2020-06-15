@@ -38,9 +38,14 @@ public class StringConsumerDelegateImpl implements ConsumerDelegate {
 	private int parallelConsumers = 2;
 
 	private boolean isRunning;
+	private boolean useString = false;
 	
 	public void setParallelConsumers(int parallelConsumers) {
 		this.parallelConsumers = parallelConsumers;
+	}
+	
+	public void setUseString(boolean useString) {
+		this.useString = useString;
 	}
 	
 	public class MessageFlowFactory implements EventFactory<MessageFlow> {
@@ -62,18 +67,24 @@ public class StringConsumerDelegateImpl implements ConsumerDelegate {
 		}
 		
 		final String filter;
+		final boolean useString;
+		
 		Map<String, Context> contextMap = new HashMap<String, Context>();
 
 		public DataTransporterEventHandler(String filter) {
+			this(filter, true);
+		}
+		
+		public DataTransporterEventHandler(String filter, boolean useString) {
 			this.filter = filter;
+			this.useString = useString;
 		}
 		
 		public void onEvent(MessageFlow event) throws Exception {
 			try { 
 				if(isRunning) {
-					String message = new String(event.body);
-					Message<String> msg = MessageBuilder
-							.withPayload(message)
+					Message<?> msg = MessageBuilder
+							.withPayload(useString ? new String(event.body) : event.body)
 							.copyHeaders(event.headers)
 							.build();
 					if(LOG.isTraceEnabled()) {
@@ -150,7 +161,7 @@ public class StringConsumerDelegateImpl implements ConsumerDelegate {
 		DataTransporterEventHandler[] eventHandlers = new DataTransporterEventHandler[parallelConsumers];
 		LOG.info("Creating {} consumer(s) for {}", parallelConsumers, filter);
 		for(int index = 0; index < parallelConsumers ; index++) {
-			DataTransporterEventHandler eventHandler = new DataTransporterEventHandler(filter);
+			DataTransporterEventHandler eventHandler = new DataTransporterEventHandler(filter, useString);
 			eventHandlers[index] = eventHandler;
 			this.handlers.add(eventHandler);
 		}

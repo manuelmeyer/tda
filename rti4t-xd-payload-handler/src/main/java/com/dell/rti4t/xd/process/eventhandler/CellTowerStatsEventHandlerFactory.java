@@ -15,8 +15,8 @@ import com.dell.rti4t.xd.eventhandler.AbstractEventHandlerFactory;
 import com.dell.rti4t.xd.eventhandler.DataTransporterEventHandler;
 import com.dell.rti4t.xd.filter.EventFilter;
 import com.dell.rti4t.xd.jmx.VFROInputOutputMetrics;
+import com.dell.rti4t.xd.transformer.DataInputParser;
 import com.dell.rti4t.xd.transformer.MapFieldReducer;
-import com.dell.rti4t.xd.transformer.ObjectListToDataTransporter;
 import com.google.common.util.concurrent.AtomicLongMap;
 
 public class CellTowerStatsEventHandlerFactory extends AbstractEventHandlerFactory {
@@ -32,7 +32,7 @@ public class CellTowerStatsEventHandlerFactory extends AbstractEventHandlerFacto
 	private AtomicLongMap<String> cellOut = AtomicLongMap.create();
 	
 	@Override
-	protected DataTransporterEventHandler createNewEventHandler(String handlerName, VFROInputOutputMetrics inputOutputMetrics, Lifecycle lifeCycle, MessageChannel outputChannel, int batchSize, int batchTimeout, MapFieldReducer reducer, ObjectListToDataTransporter transformer, List<EventFilter> eventFilters, List<EventEnricher> eventEnrichers) {
+	protected DataTransporterEventHandler createNewEventHandler(String handlerName, VFROInputOutputMetrics inputOutputMetrics, Lifecycle lifeCycle, MessageChannel outputChannel, int batchSize, int batchTimeout, MapFieldReducer reducer, DataInputParser transformer, List<EventFilter> eventFilters, List<EventEnricher> eventEnrichers) {
 		LOG.debug("Creating new CellTowerStatsEventHandler for {}", handlerName);
 		CellTowerStatsEventHandler eventHandler = new CellTowerStatsEventHandler(handlerName, inputOutputMetrics, lifeCycle, outputChannel, batchSize, batchTimeout, reducer, transformer, eventFilters);
 		eventHandler.setCellMaps(cellIn, cellOut);

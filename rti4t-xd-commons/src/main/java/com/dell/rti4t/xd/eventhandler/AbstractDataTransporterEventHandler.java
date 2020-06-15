@@ -1,7 +1,5 @@
 package com.dell.rti4t.xd.eventhandler;
 
-import static com.dell.rti4t.xd.csv.CSVToObjectParser.parse;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -15,10 +13,10 @@ import com.dell.rti4t.xd.domain.DataTransporter;
 import com.dell.rti4t.xd.enrich.EventEnricher;
 import com.dell.rti4t.xd.filter.EventFilter;
 import com.dell.rti4t.xd.jmx.VFROInputOutputMetrics;
+import com.dell.rti4t.xd.transformer.DataInputParser;
 import com.dell.rti4t.xd.transformer.MapFieldReducer;
-import com.dell.rti4t.xd.transformer.ObjectListToDataTransporter;
 
-public abstract class AbstractDataTransporterEventHandler implements DataTransporterEventHandler {
+public abstract class AbstractDataTransporterEventHandler<T, R> implements DataTransporterEventHandler<R> {
 	
 	final protected Logger LOG = LoggerFactory.getLogger(getClass());
 	
@@ -27,26 +25,50 @@ public abstract class AbstractDataTransporterEventHandler implements DataTranspo
 	final protected int batchSize;
 	final protected int batchTimeout; 
 	final protected MapFieldReducer reducer;
-	final protected ObjectListToDataTransporter transformer;
+	final protected DataInputParser<T, R> objectTransformer;
 	final protected MessageChannel outputChannel;
 	final private Lifecycle lifeCycle;
 	
 	final protected VFROInputOutputMetrics inputOutputMetrics;
 
-	public AbstractDataTransporterEventHandler(String handlerName, VFROInputOutputMetrics inputOutputMetrics, Lifecycle lifeCycle, MessageChannel outputChannel, int batchSize, int batchTimeout, MapFieldReducer reducer, ObjectListToDataTransporter transformer, List<EventFilter> eventFilters, List<EventEnricher> eventEnrichers) {
+	public AbstractDataTransporterEventHandler(String handlerName, 
+							VFROInputOutputMetrics inputOutputMetrics, 
+							Lifecycle lifeCycle, 
+							MessageChannel outputChannel, int batchSize, int batchTimeout, 
+							MapFieldReducer reducer, 
+							DataInputParser<T, R> objectTransformer, 
+							List<EventFilter> eventFilters, 
+							List<EventEnricher> eventEnrichers) {
 		this.batchSize = batchSize;
 		this.batchTimeout = batchTimeout;
 		this.reducer = reducer;
-		this.transformer = transformer;
 		this.eventFilters = eventFilters;
 		this.eventEnrichers = eventEnrichers;
 		this.outputChannel = outputChannel;
+		this.objectTransformer = objectTransformer;
 		this.lifeCycle = lifeCycle;
 		this.inputOutputMetrics = inputOutputMetrics;
 	}
 
-	public AbstractDataTransporterEventHandler(String handlerName, VFROInputOutputMetrics inputOutputMetrics, Lifecycle lifeCycle, MessageChannel outputChannel, int batchSize, int batchTimeout, MapFieldReducer reducer, ObjectListToDataTransporter transformer, List<EventFilter> eventFilters) {
-		this(handlerName, inputOutputMetrics, lifeCycle, outputChannel, batchSize, batchTimeout, reducer, transformer, eventFilters, new ArrayList<EventEnricher>());
+	public AbstractDataTransporterEventHandler(String handlerName, 
+							VFROInputOutputMetrics inputOutputMetrics, 
+							Lifecycle lifeCycle, 
+							MessageChannel outputChannel, 
+							int batchSize, 
+							int batchTimeout, 
+							MapFieldReducer reducer, 
+							DataInputParser<T, R> objectTransformer, 
+							List<EventFilter> eventFilters) {
+		this(handlerName, 
+				inputOutputMetrics, 
+				lifeCycle, 
+				outputChannel, 
+				batchSize, 
+				batchTimeout, 
+				reducer, 
+				objectTransformer, 
+				eventFilters, 
+				new ArrayList<EventEnricher>());
 	}
 
 	protected boolean accept(DataTransporter dt) {
@@ -70,14 +92,14 @@ public abstract class AbstractDataTransporterEventHandler implements DataTranspo
 		return lifeCycle.isRunning();
 	}
 
-	public void onEvent(Object body, Map<String, Object> headers) {
+	public void onEvent(R body, Map<String, Object> headers) {
 		/*
 		 * The synchronize is only between the timeout mechanism called in the factory and the accumulator
 		 * Checking timeout is < the ns
 		 */
 		synchronized(this) { 
 			try {
-				accumulate((String)body, headers);
+				accumulate(body, headers);
 			} catch(Exception e) {
 				LOG.error("Exception while processing event", e);
 			}
@@ -92,16 +114,15 @@ public abstract class AbstractDataTransporterEventHandler implements DataTranspo
     		accumulate(dt);
     	}
 	}
-
-	public void accumulate(String body, Map<String, Object> headers) {
-		LOG.trace("Message read {}", body);
-		List<List<Object>> elements = parse(body);
+	
+	private void accumulate(R body, Map<String, Object> headers) {
+		List<List<T>> elements = objectTransformer.parse(body);
 		LOG.debug("Accumulating a list of {}", elements.size());
 		int index = 0;
 		inputOutputMetrics.moreInput(elements.size());
-	    for(List<Object> element : elements) {
+	    for(List<T> element : elements) {
 	    	try {
-	    		DataTransporter dt = transformer.buildFromObjectList(element);
+	    		DataTransporter dt = objectTransformer.buildFromList(element);
 	    		chainAndAccumulate(dt);
 	        	index++;
 	    	} catch(Exception e) {

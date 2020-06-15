@@ -4,6 +4,6 @@ import java.util.List;
 
 import com.dell.rti4t.xd.domain.DataTransporter;
 
-public interface ObjectListToDataTransporter {
-	DataTransporter buildFromObjectList(List<Object> objects);
+public interface ListToDataTransporter<T> {
+	DataTransporter buildFromList(List<T> objects);
 }
