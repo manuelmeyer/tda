@@ -75,8 +75,7 @@ public class TestModuleAggAmqp {
 	String newImsi() {
 		return String.format("23415%015d", random.nextInt());
 	}
-	
-	
+		
 	protected void runRandom(String[] args) throws Exception {
 		buildImsiInList();
 		buildImsiNotInList();
@@ -212,14 +211,13 @@ public class TestModuleAggAmqp {
 	}
 	
 	protected static void createImsiFile() throws Exception {
-//		BufferedWriter fileWriter = new BufferedWriter(new FileWriter("/tmp/wl", false));
-//		Random random = new Random();
-//		for(int index = 0; index < 20_000_000; index++) {
-//			fileWriter.write(String.format("2315%010d\n", Math.abs(random.nextInt())));
-//		}
-//		fileWriter.flush();
-//		fileWriter.close();
-
+		BufferedWriter fileWriter = new BufferedWriter(new FileWriter("/tmp/wl", false));
+		Random random = new Random();
+		for(int index = 0; index < 20_000_000; index++) {
+			fileWriter.write(String.format("2315%010d\n", Math.abs(random.nextInt())));
+		}
+		fileWriter.flush();
+		fileWriter.close();
 	}
 	
 	public static void main(String[] args) throws Exception {

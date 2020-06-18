@@ -124,17 +124,27 @@ public class CSVToOffsetParser {
 			return MoreObjects.toStringHelper(this)
 					.add("start", start)
 					.add("end", end)
+					.add("input", inputToString())
 					.toString();
+		}
+		
+		private String inputToString() {
+			return input == null
+					? "<null-input>"
+					: input.get() == null 
+						? "<null-ref>" 
+						: new String(input.get());
 		}
 	}
 	
 	/**
-	 * Give a string will parse it placing sets within {} in a hashmap and other
-	 * values in the list
-	 * This is threadsafe
+	 * Give a csv byte[] will parse it by returning a list of offset(s) (input, start, end) per line.
 	 * 
-	 * @param input
-	 * @return
+	 * Offset is of type (weakref(input), start, end).
+	 * 
+	 * If input[start] is '{' then it is a map and offset will extract all key=value fields in a map.
+	 * Otherwise it is considered as a string.
+	 * 
 	 */
 	public static List<List<Offset>> parse(byte[] input) {
 		int state = START_OF_VALUE;
