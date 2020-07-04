@@ -56,7 +56,6 @@ public class InOrOutListBasedFilterImpl extends InOrOutBaseFilter {
 	@Override
 	protected void doAfterPropertiesSet() throws Exception {
 		if(!isEmpty(inOrOutFilePath)) {
-			inOrOutSet = new VersionedSet<String>();
 			LOG.info("Filter for '{}' is '{}'", inOrOutFilePath, (in == true ? "whitelist" : "blacklist"));
 			inOrOutSet = loadFileInfo();
 			startFileWatchDog();

@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Deprecated
 public class VersionedSet<T> implements Set<T> {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(VersionedSet.class);
