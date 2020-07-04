@@ -3,6 +3,7 @@
     <include resource="org/springframework/boot/logging/logback/base.xml" />
     
     <logger name="com.vodafone.dca" level="info" />
+    <logger name="org.springframework.integration.aggregator" level="debug" />
     
     <root level="error">
         <appender-ref ref="CONSOLE" />
