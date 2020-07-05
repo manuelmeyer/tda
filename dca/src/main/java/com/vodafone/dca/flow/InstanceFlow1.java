@@ -2,6 +2,10 @@ package com.vodafone.dca.flow;
 
 import static com.vodafone.dca.common.DcaChannelNames.DCA_EVENT_INPUT_CHANNEL_FLOW_1;
 import static com.vodafone.dca.common.DcaChannelNames.DCA_EVENT_OUTPUT_CHANNEL_FLOW_1;
+import static com.vodafone.dca.common.DcaChannelNames.NULL_CHANNEL;
+import static org.springframework.integration.file.support.FileExistsMode.APPEND;
+
+import java.io.File;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,10 +17,13 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.integration.dsl.IntegrationFlow;
 import org.springframework.integration.dsl.IntegrationFlows;
 import org.springframework.integration.dsl.MessageChannels;
+import org.springframework.integration.file.FileNameGenerator;
+import org.springframework.integration.file.dsl.Files;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.util.StringUtils;
 
 import com.vodafone.dca.domain.DataTransporter;
+import com.vodafone.dca.file.GenericFileNameGenerator;
 import com.vodafone.dca.filter.DataReductionFilter;
 import com.vodafone.dca.filter.LacCellFilter;
 import com.vodafone.dca.handler.AccumulatorEventHandler;
@@ -105,15 +112,24 @@ public class InstanceFlow1 {
 	
 	@Bean
 	public AccumulatorEventHandler instance1Accumulator() {
-		return new AccumulatorEventHandler("instance1", instance1OutputMessageChannel(), 100, 1000);
+		return new AccumulatorEventHandler("instance1", instance1OutputMessageChannel(), 2, 500);
+	}
+	
+	@Bean
+	public FileNameGenerator instance1FileNameGenerator() {
+		GenericFileNameGenerator fileNameGenerator = new GenericFileNameGenerator();
+		fileNameGenerator.setDirectory("/tmp");
+		fileNameGenerator.setFilePrefix("instance1-");
+		fileNameGenerator.setFileSizeThreshold(10000);
+		return fileNameGenerator;
 	}
 	
 	@Bean
 	public IntegrationFlow mainInstanceFlow1() {
 		return IntegrationFlows.from(DCA_EVENT_INPUT_CHANNEL_FLOW_1)
 				.split()
-				.filter(instance1LacCellFilter(), e -> e.discardChannel("nullChannel"))
-				.filter(instance1DataReductionFilter(), e -> e.discardChannel("nullChannel"))
+				.filter(instance1LacCellFilter(), e -> e.discardChannel(NULL_CHANNEL))
+				.filter(instance1DataReductionFilter(), e -> e.discardChannel(NULL_CHANNEL))
 				.transform(instance1MapFieldReducer())
 				.<String>handle((p, h) -> instance1Accumulator().accumulate(p))
 				.nullChannel();
@@ -122,7 +138,11 @@ public class InstanceFlow1 {
 	@Bean
 	public IntegrationFlow outputInstance1Flow() {
 		return IntegrationFlows.from(DCA_EVENT_OUTPUT_CHANNEL_FLOW_1)
-				.log("com.vodafone.dca.output")
+				.log("com.vodafone.dca.output.flow1")
+				.handle(Files
+							.outboundAdapter(new File("/tmp"))
+							.fileExistsMode(APPEND)
+							.fileNameGenerator(instance1FileNameGenerator()))
 				.nullChannel();
 	}
 }

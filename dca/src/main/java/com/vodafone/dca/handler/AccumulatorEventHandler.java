@@ -2,6 +2,8 @@ package com.vodafone.dca.handler;
 
 import static java.lang.System.currentTimeMillis;
 
+import java.util.List;
+
 import javax.annotation.PostConstruct;
 
 import org.slf4j.Logger;
@@ -10,6 +12,8 @@ import org.springframework.context.SmartLifecycle;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
+
+import com.google.common.collect.Lists;
 
 public class AccumulatorEventHandler implements SmartLifecycle {
 	
@@ -23,7 +27,8 @@ public class AccumulatorEventHandler implements SmartLifecycle {
 		long watchDog = 0;
 	}
 	
-	private Context context;
+	private static ThreadLocal<Context> localContext = new ThreadLocal<Context>();	
+	private List<Context> allContexts = Lists.newArrayList();
 	
 	private String handlerName;
 	private long batchTimeout;
@@ -35,7 +40,6 @@ public class AccumulatorEventHandler implements SmartLifecycle {
 		this.outputChannel = outputChannel;
 		this.batchSize = batchSize;
 		this.batchTimeout = batchTimeout;
-		this.context = new Context();
 	}
 
 	@PostConstruct
@@ -48,7 +52,7 @@ public class AccumulatorEventHandler implements SmartLifecycle {
 			try {
 				Thread.sleep(1000);
 				if(isRunning()) {
-					flushOnTimeout();
+					allContexts.forEach(context -> flushOnTimeout(context));
 				}
 			} catch(InterruptedException ie) {
 				return;
@@ -56,22 +60,39 @@ public class AccumulatorEventHandler implements SmartLifecycle {
 		}
 	}
 
-	protected synchronized void flushOnTimeout() {
-		long now = System.currentTimeMillis();
-		if(context.accumulated > 0 && (context.watchDog + batchTimeout - now) < 0) {
-			LOG.debug("Timeout expired for {}", Thread.currentThread().getName());
-			fflush(context);
+	protected void flushOnTimeout(Context context) {
+		synchronized(context) {
+			long now = System.currentTimeMillis();
+			if(context.accumulated > 0 && (context.watchDog + batchTimeout - now) < 0) {
+				LOG.debug("Timeout expired for {}", Thread.currentThread().getName());
+				fflush(context);
+			}
 		}
 	}
 	
 	public Object accumulate(String dt) {
-		context.builder.append(dt).append("\n");
-		context.watchDog = currentTimeMillis();
-		context.accumulated++;
-		if (context.accumulated == batchSize) {
-			fflush(context);
+		Context context = getContext();
+		synchronized(context) {
+			context.builder.append(dt).append("\n");
+			context.watchDog = currentTimeMillis();
+			context.accumulated++;
+			if (context.accumulated == batchSize) {
+				fflush(context);
+			}
 		}
 		return null;
+	}
+
+	private Context getContext() {
+		Context context = localContext.get();
+		if(context == null) {
+			synchronized(allContexts) {
+				context = new Context();
+				localContext.set(context);
+				allContexts.add(context);
+			}
+		}
+		return context;
 	}
 
 	private void fflush(Context context) {
@@ -86,7 +107,7 @@ public class AccumulatorEventHandler implements SmartLifecycle {
 				if(isRunning()) {
 					outputChannel.send(msg);
 				} else {
-					LOG.warn("Discarding {} events in {} ms - component is not running.", context.accumulated);
+					LOG.warn("Discarding {} events - component is not running.", context.accumulated);
 				}
 			}
 		} catch(Exception e) {
