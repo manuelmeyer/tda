@@ -12,7 +12,7 @@ public class AbstractFileChangeWatchdog {
 	private long lastModified = 0;
 	
 	public AbstractFileChangeWatchdog(final String filePath, final OnFileChange callback, final int frequency) {
-		LOG.info("Starting an AbstractFileChangeWatchdog on {} every {}", filePath, frequency);
+		LOG.info("Starting an AbstractFileChangeWatchdog on {} every {} sec", filePath, frequency/1000);
 		lastModified = FileUtils.lastModified(filePath);
 		new Thread(new Runnable() {
 			long currentModified = lastModified;

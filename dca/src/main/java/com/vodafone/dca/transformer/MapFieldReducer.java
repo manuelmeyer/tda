@@ -47,7 +47,7 @@ public class MapFieldReducer implements Converter<DataTransporter, String> {
 		LOG.info("fieldsToDecimal is {}", fieldsToDecimal);
 	}
 
-	protected void setAnonymiseSet(String[] fields) {
+	public void setAnonymiseSet(String[] fields) {
 		buildAnonymiseLogic(fields);
 		LOG.info("anonymiseSet is {}", anonymiseSet);
 	}

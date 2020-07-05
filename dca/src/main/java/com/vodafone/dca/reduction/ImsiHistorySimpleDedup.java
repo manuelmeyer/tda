@@ -20,8 +20,8 @@ public class ImsiHistorySimpleDedup extends ImsiHistory {
 	volatile public long previousCellTower = -1;
 	volatile public long previousTimeUTC = -1;
 	
-	public ImsiHistorySimpleDedup(long lac, long cellTower, long now) {
-		super(lac, cellTower, now);
+	public ImsiHistorySimpleDedup(long lac, long cellTower, long now, int delayBeforeDuplicate) {
+		super(lac, cellTower, now, delayBeforeDuplicate);
 		this.lac = lac;
 		this.cellTower = cellTower;
 		this.eventTime = now;
@@ -43,11 +43,10 @@ public class ImsiHistorySimpleDedup extends ImsiHistory {
 		
 		if(isSameLacCell) {
 			eventTime = now;
-			// TODO check this.
-//			if(now > (firstSeen + ReductionMapHandler.delayBeforeDuplicate)) {
-//				firstSeen = now;
-//				return false;
-//			}
+			if(now > (firstSeen + delayBeforeDuplicate)) {
+				firstSeen = now;
+				return false;
+			}
 			return true;
 		}
 		

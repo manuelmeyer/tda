@@ -134,8 +134,8 @@ public class DataReductionFilter implements GenericSelector<DataTransporter> {
 		return traceModeOn;
 	}
 
-	@PostConstruct // TODO useless
-	public void afterPropertiesSet() throws Exception {
+	@PostConstruct
+	public void setReductionHandlerProperties() throws Exception {
 		if(mode == ReductionMode.NONE) {
 			LOG.info("NO data reduction in place");
 			return;
@@ -147,13 +147,13 @@ public class DataReductionFilter implements GenericSelector<DataTransporter> {
 				reductionMapHandler.useStrongDedup();
 			case IMSIS_CHANGE_CELL_ONLY :
 			case MARK_IMSIS_CHANGE_CELL_ONLY:
-				// TODO
-				//setDelayBeforeDuplicate(8 * 3600); // 8h on the same cell before duplicating
+				// 8h on the same cell before duplicating
+				reductionMapHandler.setDelayBeforeDuplicate(8 * 3600); 
 				break;
 			default:
 				reductionMapHandler.useStrongDedup();
-				// TODO
-				//setDelayBeforeDuplicate(60); // 1mn before duplicating in other mode
+				// 60 sec on the same cell before duplicating
+				reductionMapHandler.setDelayBeforeDuplicate(60);
 				break;
 		}
 		

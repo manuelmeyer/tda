@@ -40,11 +40,10 @@ public class ImsiHistoryStrongDedup extends ImsiHistory {
 		public DuplicateState isRedactable(long lac, long cellTower, long now) {
 			if(isEquals(lac, cellTower)) {
 				eventTime = now;
-				// TODO reference the map handler
-//				if(now > (firstSeen + ReductionMapHandler.delayBeforeDuplicate)) {
-//					firstSeen = now;
-//					return DuplicateState.DUPLICATED_WITH_EXPIRED_IDLE_TIME;
-//				}
+				if(now > (firstSeen + delayBeforeDuplicate)) {
+					firstSeen = now;
+					return DuplicateState.DUPLICATED_WITH_EXPIRED_IDLE_TIME;
+				}
 				return DuplicateState.DUPLICATED;
 			}
 			return DuplicateState.NON_DUPLICATED;
@@ -69,8 +68,8 @@ public class ImsiHistoryStrongDedup extends ImsiHistory {
 	volatile LacCellHistory[] lacCellHistory;
 	volatile private boolean firstEventInGeoFence;
 	
-	public ImsiHistoryStrongDedup(long lac, long cellTower, long now) {
-		super(lac, cellTower, now);
+	public ImsiHistoryStrongDedup(long lac, long cellTower, long now, int delayBeforeDuplicate) {
+		super(lac, cellTower, now, delayBeforeDuplicate);
 		this.lacCellHistory = new LacCellHistory[2];
 		this.lacCellHistory[0] = new LacCellHistory();
 		this.lacCellHistory[1] = new LacCellHistory();

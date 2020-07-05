@@ -1,5 +1,7 @@
 package com.vodafone.dca.source;
 
+import static org.springframework.util.Assert.notNull;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.integration.endpoint.AbstractEndpoint;
-import org.springframework.util.Assert;
 
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
@@ -35,6 +36,12 @@ public class AmqpInboundChannel extends AbstractEndpoint {
 	
 	@Value("${dca.source.rabbit.prefetch-count:1}")
 	private int qos;
+	
+	private boolean readyToListen = false;
+	
+	public boolean isReadyToListen() {
+		return readyToListen;
+	}
 	
 	@Autowired
 	private BiConsumer<byte[], Map<String, Object>> rabbitConsumer;
@@ -76,7 +83,7 @@ public class AmqpInboundChannel extends AbstractEndpoint {
 	}
 	
 	private void loadProperties() throws Exception {
-		Assert.notNull(propertiesPath, "propertiesPath property cannot be null");
+		notNull(propertiesPath, "propertiesPath property cannot be null");
 		LOG.info("Reading properties from {}", propertiesPath);
 		
 		InputStream input = new FileInputStream(FileUtils.fileFromPath(propertiesPath));
@@ -101,7 +108,7 @@ public class AmqpInboundChannel extends AbstractEndpoint {
 			@Override
 			public void run() {
 				try {
-					Thread.sleep(5000);
+					Thread.sleep(300);
 					LOG.info("Binding {} to {}[{}]", queueName, exchange, routingKey);
 				    channel.queueBind(queueName, exchange, routingKey);
 			
@@ -110,11 +117,11 @@ public class AmqpInboundChannel extends AbstractEndpoint {
 						AmqpConsumer consumer = new AmqpConsumer(channel);
 				        channel.basicConsume(queueName, false, consumer);
 					}
+					readyToListen = true;
 				} catch(Exception e) {
 					LOG.error("Cannot start listeners", e);
 				}
 			}
-			
 		}).start();
 	}
 	
@@ -140,7 +147,6 @@ public class AmqpInboundChannel extends AbstractEndpoint {
 	protected void doStart() {
 		LOG.info("Requested to start");
 		try {
-			//consumerDelegate.initialise();
 			startListeners();
 		} catch(Exception e) {
 			LOG.error("Cannot bind and start listeners");
@@ -152,7 +158,6 @@ public class AmqpInboundChannel extends AbstractEndpoint {
 	protected void doStop() {
 		LOG.info("Requested to stop");
 		try {
-			//consumerDelegate.shutdown();
 			channel.close();
 		} catch(Exception e) {
 			LOG.error("Error while closing channel", e);

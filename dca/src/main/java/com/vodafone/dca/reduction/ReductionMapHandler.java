@@ -17,7 +17,7 @@ public class ReductionMapHandler {
 	static private Logger LOG = LoggerFactory.getLogger(ReductionMapHandler.class);
 	
 	// we resend events for the same <lac, cell> after delayBeforeDuplicate on the same cell
-	public long delayBeforeDuplicate = 60;
+	public int delayBeforeDuplicate = 60;
 	private int initialCapacity = 500_000;
 	private long expireAfterInSec = 7201L;
 	private int concurrencyLevel = 32;
@@ -82,8 +82,8 @@ public class ReductionMapHandler {
 
 	public ImsiHistory newImsiHistory(String imsi, long lac, long cellTower, long now) {
 		ImsiHistory newEntry = useSimpleDedup 
-				? new ImsiHistorySimpleDedup(lac, cellTower, now)
-				: new ImsiHistoryStrongDedup(lac, cellTower, now);
+				? new ImsiHistorySimpleDedup(lac, cellTower, now, delayBeforeDuplicate)
+				: new ImsiHistoryStrongDedup(lac, cellTower, now, delayBeforeDuplicate);
 		newEntry.isGeoFence(true);
 		ismiHistoryMap.put(imsi, newEntry);
 		return newEntry;

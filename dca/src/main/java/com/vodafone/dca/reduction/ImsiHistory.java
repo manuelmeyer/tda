@@ -7,6 +7,7 @@ public abstract class ImsiHistory implements Serializable {
 	
 	volatile protected boolean inGeoFence;
 	volatile public short accessed;
+	protected int delayBeforeDuplicate;
 	
 	public abstract long previousLac();
 	public abstract long previousCellTower();
@@ -18,9 +19,10 @@ public abstract class ImsiHistory implements Serializable {
 	protected abstract void enterGeofence();
 	protected abstract void followGeofence();
 	
-	public ImsiHistory(long lac, long cellTower, long now) {
-		inGeoFence = true;
-		accessed = 0;
+	public ImsiHistory(long lac, long cellTower, long now, int delayBeforeDuplicate) {
+		this.inGeoFence = true;
+		this.accessed = 0;
+		this.delayBeforeDuplicate = delayBeforeDuplicate;
 	}
 	
 	public void isGeoFence(boolean isInGeofence) {	
