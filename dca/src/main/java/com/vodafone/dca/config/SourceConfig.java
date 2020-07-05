@@ -114,7 +114,6 @@ public class SourceConfig {
 				.filter(dataTransporter -> blackListFilter.accept(dataTransporter))
 				.filter(dataTransporter -> whiteListFilter.accept(dataTransporter))
 				.collect(Collectors.toList());
-		LOG.info("generated {} dataTransporters from {} offset lists", dataTransporters.size(), offsetList.size());
 		if (!CollectionUtils.isEmpty(dataTransporters)) {
 			dispatchers.forEach((k, v) -> v.receive(dataTransporters));
 		}

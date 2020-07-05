@@ -41,7 +41,7 @@ public class CSVToOffsetParser {
 		public OffsetPool() {
 			offsets = new ArrayList<Offset>(NO_OF_FIELDS * NO_OF_EVENTS);
 			extendPool(NO_OF_FIELDS * NO_OF_EVENTS);
-			LOG.info("Created {} offset in local", NO_OF_FIELDS * NO_OF_EVENTS);
+			LOG.debug("Created {} offset in local", NO_OF_FIELDS * NO_OF_EVENTS);
 		}
 		
 		public void reset() {
@@ -140,7 +140,7 @@ public class CSVToOffsetParser {
 	/**
 	 * Give a csv byte[] will parse it by returning a list of offset(s) (input, start, end) per line.
 	 * 
-	 * Offset is of type (weakref(input), start, end).
+	 * Offset is of type (WeakReference(input), start, end).
 	 * 
 	 * If input[start] is '{' then it is a map and offset will extract all key=value fields in a map.
 	 * Otherwise it is considered as a string.

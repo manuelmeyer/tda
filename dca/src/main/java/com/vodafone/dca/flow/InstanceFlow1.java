@@ -37,51 +37,51 @@ import com.vodafone.dca.transformer.MapFieldReducer;
 
 @Configuration
 @Order(1)
-@ConditionalOnProperty(name="dca.instance1.enabled")
+@ConditionalOnProperty(name="dca.instances.instance1.enabled")
 public class InstanceFlow1 {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(InstanceFlow1.class);
 	
-	@Value("${dca.instance1.filter.lac-cell.file-scan-frequency:60}")
+	@Value("${dca.instances.instance1.filter.lac-cell.file-scan-frequency:60}")
 	private int fileScanFrequency;
 	
-	@Value("${dca.instance1.filter.lac-cell.lac-field:lac}")
+	@Value("${dca.instances.instance1.filter.lac-cell.lac-field:lac}")
 	private String lacField;
 	
-	@Value("${dca.instance1.filter.lac-cell.cell-tower-field:cellTower}")
+	@Value("${dca.instances.instance1.filter.lac-cell.cell-tower-field:cellTower}")
 	private String cellField;
 	
-	@Value("${dca.instance1.filter.lac-cell.follow-exit:true}")
+	@Value("${dca.instances.instance1.filter.lac-cell.follow-exit:true}")
 	private boolean followExit;
 	
-	@Value("${dca.instance1.filter.lac-cell.lac-cell-file}")
+	@Value("${dca.instances.instance1.filter.lac-cell.lac-cell-file}")
 	private String lacCellFilePath;
 	
-	@Value("${dca.instance1.filter.reduction.mode:IMSIS_CHANGE_CELL_ONLY}")
+	@Value("${dca.instances.instance1.filter.reduction.mode:IMSIS_CHANGE_CELL_ONLY}")
 	private ReductionMode reductionMode;
 	
-	@Value("${dca.instance1.salt:}")
+	@Value("${dca.instances.instance1.salt:}")
 	private String pepper;
 	
-	@Value("${dca.instance1.output.anonymise-fields:}")
+	@Value("${dca.instances.instance1.output.anonymise-fields:}")
 	private String anonymiseFields[];
 
-	@Value("${dca.instance1.output.field-definition}")
+	@Value("${dca.instances.instance1.output.field-definition}")
 	private String fieldsOutDefinitionFile;
 	
-	@Value("${dca.instance1.output.batch-size:200}")
+	@Value("${dca.instances.instance1.output.batch-size:200}")
 	private int batchSize;
 	
-	@Value("${dca.instance1.output.batch-timeout:500}")
+	@Value("${dca.instances.instance1.output.batch-timeout:500}")
 	private int batchTimeout;
 	
-	@Value("${dca.instance1.output.file-directory}")
+	@Value("${dca.instances.instance1.output.file-directory}")
 	private String outputDirectory;
 
-	@Value("${dca.instance1.output.file-size-threshold}")
+	@Value("${dca.instances.instance1.output.file-size-threshold}")
 	private int fileSizeThreshold;
 	
-	@Value("${dca.instance1.output.file-prefix:}")
+	@Value("${dca.instances.instance1.output.file-prefix:}")
 	private String filePrefix;
 
 	@Bean(name = DCA_EVENT_INPUT_CHANNEL_FLOW_1)

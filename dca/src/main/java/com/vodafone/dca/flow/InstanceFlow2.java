@@ -36,7 +36,7 @@ import com.vodafone.dca.transformer.MapFieldReducer;
 
 @Configuration
 @Order(1)
-@ConditionalOnProperty(name="dca.instance2.enabled")
+@ConditionalOnProperty(name="dca.instances.instance2.enabled")
 public class InstanceFlow2 {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(InstanceFlow2.class);
@@ -47,46 +47,46 @@ public class InstanceFlow2 {
 		return MessageChannels.direct(DCA_EVENT_INPUT_CHANNEL_FLOW_2).get();
 	}
 	
-	@Value("${dca.instance2.filter.lac-cell.file-scan-frequency:60}")
+	@Value("${dca.instances.instance2.filter.lac-cell.file-scan-frequency:60}")
 	private int fileScanFrequency;
 	
-	@Value("${dca.instance2.filter.lac-cell.lac-field:lac}")
+	@Value("${dca.instances.instance2.filter.lac-cell.lac-field:lac}")
 	private String lacField;
 	
-	@Value("${dca.instance2.filter.lac-cell.cell-tower-field:cellTower}")
+	@Value("${dca.instances.instance2.filter.lac-cell.cell-tower-field:cellTower}")
 	private String cellField;
 	
-	@Value("${dca.instance2.filter.lac-cell.follow-exit:true}")
+	@Value("${dca.instances.instance2.filter.lac-cell.follow-exit:true}")
 	private boolean followExit;
 	
-	@Value("${dca.instance2.filter.lac-cell.lac-cell-file}")
+	@Value("${dca.instances.instance2.filter.lac-cell.lac-cell-file}")
 	private String lacCellFilePath;
 	
-	@Value("${dca.instance2.filter.reduction.mode:IMSIS_CHANGE_CELL}")
+	@Value("${dca.instances.instance2.filter.reduction.mode:IMSIS_CHANGE_CELL}")
 	private ReductionMode reductionMode;
 	
-	@Value("${dca.instance2.salt:}")
+	@Value("${dca.instances.instance2.salt:}")
 	private String pepper;
 
-	@Value("${dca.instance2.output.field-definition}")
+	@Value("${dca.instances.instance2.output.field-definition}")
 	private String fieldsOutDefinitionFile;
 	
-	@Value("${dca.instance2.output.batch-size:200}")
+	@Value("${dca.instances.instance2.output.batch-size:200}")
 	private int batchSize;
 	
-	@Value("${dca.instance2.output.batch-timeout:500}")
+	@Value("${dca.instances.instance2.output.batch-timeout:500}")
 	private int batchTimeout;
 	
-	@Value("${dca.instance2.output.file-directory}")
+	@Value("${dca.instances.instance2.output.file-directory}")
 	private String outputDirectory;
 
-	@Value("${dca.instance2.output.file-size-threshold}")
+	@Value("${dca.instances.instance2.output.file-size-threshold}")
 	private int fileSizeThreshold;
 	
-	@Value("${dca.instance2.output.file-prefix:}")
+	@Value("${dca.instances.instance2.output.file-prefix:}")
 	private String filePrefix;
 
-	@Value("${dca.instance2.output.anonymise-fields:}")
+	@Value("${dca.instances.instance2.output.anonymise-fields:}")
 	private String anonymiseFields[];
 
 	@Bean(name = DCA_EVENT_INPUT_CHANNEL_FLOW_2)
