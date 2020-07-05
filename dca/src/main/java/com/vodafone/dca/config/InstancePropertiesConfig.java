@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.vodafone.dca.domain.InstancesProperties;
+import com.vodafone.dca.domain.PerInstanceProperties;
 
 @Configuration
 @EnableConfigurationProperties
@@ -20,5 +21,10 @@ public class InstancePropertiesConfig {
 	public InstancesProperties instancesProperties() {
 		LOG.info("creating instance1Properties");
 		return new InstancesProperties();
+	}
+	
+	@Bean
+	public PerInstanceProperties instance1Properties() {
+		return instancesProperties().getInstance1();
 	}
 }

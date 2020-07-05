@@ -23,6 +23,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.rabbitmq.client.Channel;
 import com.vodafone.dca.domain.InstancesProperties;
+import com.vodafone.dca.domain.PerInstanceProperties;
 import com.vodafone.dca.source.AmqpInboundChannel;
 
 @SpringBootTest
@@ -32,6 +33,7 @@ import com.vodafone.dca.source.AmqpInboundChannel;
 	
 	"dca.instances.instance1.enabled=true",
 	"dca.instances.instance1.filter.lac-cell.lac-cell-file=test-refdata/instance1/lac-cells.csv",
+	"dca.instances.instance1.filter.lac-cell.follow-exit.=true",
 	"dca.instances.instance1.filter.reduction.mode=IMSIS_CHANGE_CELL_ONLY",
 	"dca.instances.instance1.output.field-definition=test-refdata/instance1/output.def",
 	"dca.instances.instance1.output.file-directory=${java.io.tmpdir}",
@@ -39,7 +41,7 @@ import com.vodafone.dca.source.AmqpInboundChannel;
 	
 	"dca.instances.instance2.enabled=true",
 	"dca.instances.instance2.filter.lac-cell.lac-cell-file=test-refdata/instance2/lac-cells.csv",
-	"dca.instances.instance1.filter.reduction.mode=IMSIS_CHANGE_CELL",
+	"dca.instances.instance2.filter.reduction.mode=IMSIS_CHANGE_CELL",
 	"dca.instances.instance2.output.anonymise-fields=imsi",
 	"dca.instances.instance2.output.field-definition=test-refdata/instance2/output.def",
 	"dca.instances.instance2.output.file-directory=${java.io.tmpdir}",
@@ -57,6 +59,12 @@ public class DcaApplicationTests {
 	
 	@Autowired
 	InstancesProperties instancesProperties;
+	
+	@Autowired
+	PerInstanceProperties instance1Properties;
+	
+	@Autowired
+	PerInstanceProperties instance2Properties;
 
 	@Value("${java.io.tmpdir}")
 	String tmpDir;
@@ -74,6 +82,10 @@ public class DcaApplicationTests {
 	public void canGetPropertiesUsingConfigurationProperties() {
 		assertNotNull(instancesProperties);
 		LOG.info("instancesProperties is {}", instancesProperties);
+		assertNotNull(instance1Properties);
+		LOG.info("instance1Properties is {}", instance1Properties);
+		assertNotNull(instance2Properties);
+		LOG.info("instance2Properties is {}", instance2Properties);
 	}
 
 	@Test

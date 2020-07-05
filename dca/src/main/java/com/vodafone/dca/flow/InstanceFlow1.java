@@ -9,6 +9,7 @@ import java.io.File;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -25,6 +26,9 @@ import org.springframework.messaging.MessageChannel;
 import org.springframework.util.StringUtils;
 
 import com.vodafone.dca.domain.DataTransporter;
+import com.vodafone.dca.domain.LacCellFilterProperties;
+import com.vodafone.dca.domain.OutputProperties;
+import com.vodafone.dca.domain.PerInstanceProperties;
 import com.vodafone.dca.file.GenericFileNameGenerator;
 import com.vodafone.dca.filter.DataReductionFilter;
 import com.vodafone.dca.filter.DataReductionFilter.ReductionMode;
@@ -42,48 +46,9 @@ public class InstanceFlow1 {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(InstanceFlow1.class);
 	
-	@Value("${dca.instances.instance1.filter.lac-cell.file-scan-frequency:60}")
-	private int fileScanFrequency;
+	@Autowired
+	private PerInstanceProperties instance1Properties;
 	
-	@Value("${dca.instances.instance1.filter.lac-cell.lac-field:lac}")
-	private String lacField;
-	
-	@Value("${dca.instances.instance1.filter.lac-cell.cell-tower-field:cellTower}")
-	private String cellField;
-	
-	@Value("${dca.instances.instance1.filter.lac-cell.follow-exit:true}")
-	private boolean followExit;
-	
-	@Value("${dca.instances.instance1.filter.lac-cell.lac-cell-file}")
-	private String lacCellFilePath;
-	
-	@Value("${dca.instances.instance1.filter.reduction.mode:IMSIS_CHANGE_CELL_ONLY}")
-	private ReductionMode reductionMode;
-	
-	@Value("${dca.instances.instance1.salt:}")
-	private String pepper;
-	
-	@Value("${dca.instances.instance1.output.anonymise-fields:}")
-	private String anonymiseFields[];
-
-	@Value("${dca.instances.instance1.output.field-definition}")
-	private String fieldsOutDefinitionFile;
-	
-	@Value("${dca.instances.instance1.output.batch-size:200}")
-	private int batchSize;
-	
-	@Value("${dca.instances.instance1.output.batch-timeout:500}")
-	private int batchTimeout;
-	
-	@Value("${dca.instances.instance1.output.file-directory}")
-	private String outputDirectory;
-
-	@Value("${dca.instances.instance1.output.file-size-threshold}")
-	private int fileSizeThreshold;
-	
-	@Value("${dca.instances.instance1.output.file-prefix:}")
-	private String filePrefix;
-
 	@Bean(name = DCA_EVENT_INPUT_CHANNEL_FLOW_1)
 	public MessageChannel dcaEventInputFLow1() {
 		LOG.info("Creating channel {}", DCA_EVENT_INPUT_CHANNEL_FLOW_1);
@@ -103,11 +68,12 @@ public class InstanceFlow1 {
 
 	@Bean
 	public GenericSelector<DataTransporter> instance1LacCellFilter() {
+		LacCellFilterProperties lacCellFilter = instance1Properties.getFilter().getLacCell();
 		return LacCellFilter.newBuilder()
-				.withFileScanFrequency(fileScanFrequency)
-				.withLacCellFields(lacField, cellField)
-				.withFollowExit(followExit)
-				.withLacCellFilePath(lacCellFilePath)
+				.withFileScanFrequency(lacCellFilter.getFileScanFrequency())
+				.withLacCellFields(lacCellFilter.getLacField(), lacCellFilter.getCellTowerField())
+				.withFollowExit(lacCellFilter.isFollowExit())
+				.withLacCellFilePath(lacCellFilter.getLacCellFile())
 				.withReductionMapHandler(instance1ReductionMapHandler())
 				.build();
 	}
@@ -116,7 +82,7 @@ public class InstanceFlow1 {
 	public GenericSelector<DataTransporter> instance1DataReductionFilter() {
 		DataReductionFilter dataReductionFilter = new DataReductionFilter();
 		dataReductionFilter.setReductionMapHandler(instance1ReductionMapHandler());
-		dataReductionFilter.setReductionMode(reductionMode);
+		dataReductionFilter.setReductionMode(instance1Properties.getFilter().getReduction().getMode());
 		return dataReductionFilter;
 	}
 	
@@ -131,6 +97,7 @@ public class InstanceFlow1 {
 	@Bean
 	public PepperManager instance1PepperManager() {
 		PepperManager pepperManager = new PepperManager();
+		String pepper = instance1Properties.getSalt();
 		if (StringUtils.isEmpty(pepper)) {
 			pepperManager.setPepper(pepper);
 		}
@@ -139,24 +106,27 @@ public class InstanceFlow1 {
 	
 	@Bean
 	public Converter<DataTransporter, String> instance1MapFieldReducer() {
+		OutputProperties output = instance1Properties.getOutput();
 		MapFieldReducer mapFieldReducer = new MapFieldReducer();
 		mapFieldReducer.setPepperManager(instance1PepperManager());
-		mapFieldReducer.setFieldsOutDefinitionFile(fieldsOutDefinitionFile);
-		mapFieldReducer.setAnonymiseSet(anonymiseFields);
+		mapFieldReducer.setFieldsOutDefinitionFile(output.getFieldDefinition());
+		mapFieldReducer.setAnonymiseSet(output.getAnonymiseFields());
 		return mapFieldReducer;
 	}
 	
 	@Bean
 	public AccumulatorEventHandler instance1Accumulator() {
-		return new AccumulatorEventHandler("instance1", instance1OutputMessageChannel(), batchSize, batchTimeout);
+		OutputProperties output = instance1Properties.getOutput();
+		return new AccumulatorEventHandler("instance1", instance1OutputMessageChannel(), output.getBatchSize(), output.getBatchTimeout());
 	}
 	
 	@Bean
 	public FileNameGenerator instance1FileNameGenerator() {
+		OutputProperties output = instance1Properties.getOutput();
 		GenericFileNameGenerator fileNameGenerator = new GenericFileNameGenerator();
-		fileNameGenerator.setDirectory(outputDirectory);
-		fileNameGenerator.setFilePrefix(filePrefix);
-		fileNameGenerator.setFileSizeThreshold(fileSizeThreshold);
+		fileNameGenerator.setDirectory(output.getFileDirectory());
+		fileNameGenerator.setFilePrefix(output.getFilePrefix());
+		fileNameGenerator.setFileSizeThreshold(output.getFileSizeThreshold());
 		return fileNameGenerator;
 	}
 	
@@ -174,7 +144,7 @@ public class InstanceFlow1 {
 	@Bean
 	public IntegrationFlow outputInstance1Flow() {
 		return IntegrationFlows.from(DCA_EVENT_OUTPUT_CHANNEL_FLOW_1)
-				.handle(Files.outboundAdapter(new File(outputDirectory))
+				.handle(Files.outboundAdapter(new File(instance1Properties.getOutput().getFileDirectory()))
 						.fileExistsMode(APPEND)
 						.fileNameGenerator(instance1FileNameGenerator()))
 				.nullChannel();
