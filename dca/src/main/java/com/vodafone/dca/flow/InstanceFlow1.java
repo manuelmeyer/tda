@@ -10,7 +10,6 @@ import java.io.File;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,7 +30,6 @@ import com.vodafone.dca.domain.OutputProperties;
 import com.vodafone.dca.domain.PerInstanceProperties;
 import com.vodafone.dca.file.GenericFileNameGenerator;
 import com.vodafone.dca.filter.DataReductionFilter;
-import com.vodafone.dca.filter.DataReductionFilter.ReductionMode;
 import com.vodafone.dca.filter.LacCellFilter;
 import com.vodafone.dca.filter.LacCellReductionFilter;
 import com.vodafone.dca.handler.AccumulatorEventHandler;
@@ -50,7 +48,7 @@ public class InstanceFlow1 {
 	private PerInstanceProperties instance1Properties;
 	
 	@Bean(name = DCA_EVENT_INPUT_CHANNEL_FLOW_1)
-	public MessageChannel dcaEventInputFLow1() {
+	public MessageChannel dcaEventInputFlow1() {
 		LOG.info("Creating channel {}", DCA_EVENT_INPUT_CHANNEL_FLOW_1);
 		return MessageChannels.direct(DCA_EVENT_INPUT_CHANNEL_FLOW_1).get();
 	}
@@ -117,7 +115,9 @@ public class InstanceFlow1 {
 	@Bean
 	public AccumulatorEventHandler instance1Accumulator() {
 		OutputProperties output = instance1Properties.getOutput();
-		return new AccumulatorEventHandler("instance1", instance1OutputMessageChannel(), output.getBatchSize(), output.getBatchTimeout());
+		return new AccumulatorEventHandler("instance1", instance1OutputMessageChannel(), 
+				output.getBatchSize(), 
+				output.getBatchTimeout());
 	}
 	
 	@Bean

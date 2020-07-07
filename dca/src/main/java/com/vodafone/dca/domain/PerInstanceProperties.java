@@ -1,15 +1,35 @@
 package com.vodafone.dca.domain;
 
+import java.util.UUID;
+
 import com.google.common.base.MoreObjects;
 
 public class PerInstanceProperties {
 	
 	private String salt = "";
 	private boolean enabled;
+	private String name = UUID.randomUUID().toString();
+	private InstanceTemplate template;
 	private OutputProperties output;
 	private FilterProperties filter;
+	
+	public InstanceTemplate getTemplate() {
+		return template;
+	}
 
-	public boolean getEnabled() {
+	public void setTemplate(InstanceTemplate template) {
+		this.template = template;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public boolean isEnabled() {
 		return enabled;
 	}
 
@@ -45,6 +65,7 @@ public class PerInstanceProperties {
 	public String toString() {
 		return MoreObjects.toStringHelper(this)
 				.add("salt", salt)
+				.add("name", name)
 				.add("enabled", enabled)
 				.add("filter", filter)
 				.add("output", output)
