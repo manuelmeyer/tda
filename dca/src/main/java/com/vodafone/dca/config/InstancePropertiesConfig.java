@@ -7,6 +7,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.vodafone.dca.domain.FilterBlackWhiteListProperties;
 import com.vodafone.dca.domain.MultiInstancesProperties;
 import com.vodafone.dca.domain.MultiShellProcessorsProperties;
 import com.vodafone.dca.domain.PerInstanceProperties;
@@ -23,7 +24,14 @@ public class InstancePropertiesConfig {
 		LOG.info("Creating InstancesProperties");
 		return new MultiInstancesProperties();
 	}
-	
+
+	@Bean
+	@ConfigurationProperties(prefix="dca.filter-bw-list")
+	public FilterBlackWhiteListProperties filterBlackWhiteListProperties() {
+		LOG.info("Creating FilterBlackWhiteListProperties");
+		return new FilterBlackWhiteListProperties();
+	}
+
 	@Bean
 	@ConfigurationProperties(prefix="dca")
 	public MultiShellProcessorsProperties multiShellProcessorProperties() {

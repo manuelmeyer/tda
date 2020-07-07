@@ -23,6 +23,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.rabbitmq.client.Channel;
+import com.vodafone.dca.domain.FilterBlackWhiteListProperties;
 import com.vodafone.dca.domain.MultiInstancesProperties;
 import com.vodafone.dca.domain.MultiShellProcessorsProperties;
 import com.vodafone.dca.domain.PerInstanceProperties;
@@ -32,6 +33,11 @@ import com.vodafone.dca.source.AmqpInboundChannel;
 @RunWith(SpringRunner.class)
 @TestPropertySource(properties = {
 	"dca.input.field-definition:test-refdata/input.def",
+	
+	"dca.filter-bw-list.white-list-file=test-refdata/white-list.csv",
+	"dca.filter-bw-list.black-list-file=test-refdata/black-list.csv",
+	"dca.filter-bw-list.file-scan-frequency=120",
+	"dca.filter-bw-list.filter-field=imsi",
 	
 	"dca.instances[0].enabled=true",
 	"dca.instances[0].name=instance1",
@@ -79,6 +85,9 @@ public class DcaApplicationTests {
 	PerInstanceProperties instance2Properties;
 	
 	@Autowired
+	FilterBlackWhiteListProperties filterBlackWhiteListProperties;
+	
+	@Autowired
 	MultiShellProcessorsProperties multiShellProcessorProperties;
 
 	@Value("${java.io.tmpdir}")
@@ -107,20 +116,32 @@ public class DcaApplicationTests {
 		assertNotNull(multiShellProcessorProperties);
 		LOG.info("multiShellProcessorProperties is {}", multiShellProcessorProperties);
 		
-		Thread.sleep(40000);
+		assertNotNull(filterBlackWhiteListProperties);
+		LOG.info("filterBlackWhiteListProperties is {}", filterBlackWhiteListProperties);
 	}
 
 	@Test
-	public void canGenerateInstance1Files() throws Exception {
+	public void canDynaInstancesGenerateSimpleFiles() throws Exception {
 		sendMessages(loadFileData("rabbit-messages/networkrail.simple"), 1, amqpChannel, 100);
-		await()
-			.until(() -> generatedFiles(tmpDir, "instance1").count() == 1);
+		
+		await().until(() -> generatedFiles(tmpDir, "instance1").count() == 1);
 		assertGeneratedIsExpected(tmpDir, "instance1", "generated-expected/instance1/networkrail.simple.expected");
 		
-		await()
-			.until(() -> generatedFiles(tmpDir, "instance2").count() == 1);
+		await().until(() -> generatedFiles(tmpDir, "instance2").count() == 1);
 		assertGeneratedIsExpected(tmpDir, "instance2", "generated-expected/instance2/networkrail.simple.expected");
 	}
+	
+	@Test
+	public void canDynaInstancesGenerateFilesFromFullCapture() throws Exception {
+		sendMessages(loadFileData("rabbit-messages/sample.all.protocols"), 1, amqpChannel, 100);
+		
+		await().until(() -> generatedFiles(tmpDir, "instance1").count() == 1);
+		assertGeneratedIsExpected(tmpDir, "instance1", "generated-expected/instance1/sample.all.protocols.expected");
+		
+		await().until(() -> generatedFiles(tmpDir, "instance2").count() == 1);
+		assertGeneratedIsExpected(tmpDir, "instance2", "generated-expected/instance2/sample.all.protocols.expected");
+	}
+
 	
 	@Test
 	@Ignore // just to see how it reacts under fire.

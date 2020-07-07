@@ -10,8 +10,8 @@ public class PerInstanceProperties {
 	private boolean enabled;
 	private String name = UUID.randomUUID().toString();
 	private InstanceTemplate template;
-	private OutputProperties output;
-	private FilterProperties filter;
+	private OutputProperties output = new OutputProperties();
+	private FilterProperties filter = new FilterProperties();
 	
 	public InstanceTemplate getTemplate() {
 		return template;

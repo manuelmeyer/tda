@@ -13,7 +13,6 @@ import javax.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.annotation.Order;
@@ -43,9 +42,9 @@ import com.vodafone.dca.transformer.MapFieldReducer;
 
 @Configuration
 @Order(0)
-public class DynamicInstancesConfig {
+public class DynamicInstancesFlowConfig {
 	
-	private static final Logger LOG = LoggerFactory.getLogger(DynamicInstancesConfig.class);
+	private static final Logger LOG = LoggerFactory.getLogger(DynamicInstancesFlowConfig.class);
 	
 	@Autowired
 	private MultiInstancesProperties multiInstancesProperties;

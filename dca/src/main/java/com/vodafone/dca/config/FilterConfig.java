@@ -1,32 +1,24 @@
 package com.vodafone.dca.config;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.vodafone.dca.domain.FilterBlackWhiteListProperties;
 import com.vodafone.dca.filter.InOrOutListBasedFilter;
 
 @Configuration
 public class FilterConfig {
 	
-	@Value("${dca.filter.common.bw.white-list-file:}")
-	private String whiteListFilePath;
-
-	@Value("${dca.filter.common.bw.black-list-file:}")
-	private String blackListFilePath;
+	@Autowired
+	private FilterBlackWhiteListProperties filterBlackWhiteListProperties;
 	
-	@Value("${dca.filter.common.bw.file-scan-frequency:60}")
-	private int fileScanFrequency;
-
-	@Value("${dca.filter.common.bw.filter-field:imsi}")
-	private String filterField;
-		
 	@Bean
 	public InOrOutListBasedFilter blackListFilter() {
 		return InOrOutListBasedFilter.newBuilder()
-				.withFileScanFrequency(fileScanFrequency)
-				.withFilterField(filterField)
-				.withListFilePath(blackListFilePath)
+				.withFileScanFrequency(filterBlackWhiteListProperties.getFileScanFrequency())
+				.withFilterField(filterBlackWhiteListProperties.getFilterField())
+				.withListFilePath(filterBlackWhiteListProperties.getBlackListFile())
 				.withInMode(false)
 				.build();
 	}
@@ -34,9 +26,9 @@ public class FilterConfig {
 	@Bean
 	public InOrOutListBasedFilter whiteListFilter() {
 		return InOrOutListBasedFilter.newBuilder()
-				.withFileScanFrequency(fileScanFrequency)
-				.withFilterField(filterField)
-				.withListFilePath(whiteListFilePath)
+				.withFileScanFrequency(filterBlackWhiteListProperties.getFileScanFrequency())
+				.withFilterField(filterBlackWhiteListProperties.getFilterField())
+				.withListFilePath(filterBlackWhiteListProperties.getWhiteListFile())
 				.withInMode(true)
 				.build();
 	}

@@ -37,7 +37,7 @@ public class TestUtils {
 	}
 
 	public static Channel createAMQPChannel() throws Exception {
-        ConnectionFactory factory = new ConnectionFactory();        
+       ConnectionFactory factory = new ConnectionFactory();        
        factory.setUsername("decoder");
        factory.setPassword("decoder");
        factory.setVirtualHost("/");
@@ -88,6 +88,11 @@ public class TestUtils {
 		Path generated = generatedFiles(tmpDir, prefix).findFirst().get();
 		String generatedContent = loadFileData(generated.toString());
 		String expectedContent = loadFileData(referenceFile);
+		
+		if(!expectedContent.equals(generatedContent)) {
+			// see the difference on screen.
+			LOG.info("\nExpected ------------ \n{}\n generated -------------------\n{}\n---------------", expectedContent, generatedContent);
+		}
 		assertEquals(expectedContent, generatedContent);		
 	}
 }

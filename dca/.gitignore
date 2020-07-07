@@ -1,5 +1,7 @@
 HELP.md
 target/
+runtime/*.jar
+runtime/logs
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**
 !**/src/test/**
