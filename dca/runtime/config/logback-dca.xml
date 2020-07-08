@@ -3,7 +3,7 @@
     <include resource="org/springframework/boot/logging/logback/base.xml" />
     
     <logger name="com.vodafone.dca" level="info" />
-    <logger name="com.vodafone.dca.shell.SpawnProcess" level="info" />
+    <logger name="run.shell" level="info" />
    
     <root level="error">
         <appender-ref ref="CONSOLE" />

@@ -7,10 +7,10 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.vodafone.dca.domain.FilterBlackWhiteListProperties;
-import com.vodafone.dca.domain.MultiInstancesProperties;
-import com.vodafone.dca.domain.MultiShellProcessorsProperties;
-import com.vodafone.dca.domain.PerInstanceProperties;
+import com.vodafone.dca.domain.properties.FilterBlackWhiteListProperties;
+import com.vodafone.dca.domain.properties.MultiInstancesProperties;
+import com.vodafone.dca.domain.properties.MultiShellProcessorsProperties;
+import com.vodafone.dca.domain.properties.PerInstanceProperties;
 
 @Configuration
 @EnableConfigurationProperties

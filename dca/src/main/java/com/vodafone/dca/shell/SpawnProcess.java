@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 
 public class SpawnProcess implements Callable<Integer> {
 	
-	private final static Logger LOG = LoggerFactory.getLogger(SpawnProcess.class);
+	private final static Logger LOG = LoggerFactory.getLogger("run.shell");
 	
 	final private String command;
 	final private String[] environmentParams;
@@ -50,8 +50,7 @@ public class SpawnProcess implements Callable<Integer> {
 		Thread thread = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				try {
-					BufferedReader processStdErr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+				try (BufferedReader processStdErr = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
 					String out;
 					while((out = processStdErr.readLine()) != null) {
 						if(stdErr != null) {
@@ -75,8 +74,7 @@ public class SpawnProcess implements Callable<Integer> {
 		Thread thread = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				try {
-					BufferedReader processStdOut = new BufferedReader(new InputStreamReader(process.getInputStream()));
+				try (BufferedReader processStdOut = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
 					String out;
 					while((out = processStdOut.readLine()) != null) {
 						if(stdOut != null) {

@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import com.google.common.collect.Lists;
-import com.vodafone.dca.domain.MultiShellProcessorsProperties;
+import com.vodafone.dca.domain.properties.MultiShellProcessorsProperties;
 
 @EnableScheduling
 @Component

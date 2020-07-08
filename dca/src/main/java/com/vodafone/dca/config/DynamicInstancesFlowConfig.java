@@ -27,10 +27,10 @@ import org.springframework.integration.file.dsl.Files;
 import org.springframework.util.StringUtils;
 
 import com.vodafone.dca.domain.DataTransporter;
-import com.vodafone.dca.domain.LacCellFilterProperties;
-import com.vodafone.dca.domain.MultiInstancesProperties;
-import com.vodafone.dca.domain.OutputProperties;
-import com.vodafone.dca.domain.PerInstanceProperties;
+import com.vodafone.dca.domain.properties.LacCellFilterProperties;
+import com.vodafone.dca.domain.properties.MultiInstancesProperties;
+import com.vodafone.dca.domain.properties.OutputProperties;
+import com.vodafone.dca.domain.properties.PerInstanceProperties;
 import com.vodafone.dca.file.GenericFileNameGenerator;
 import com.vodafone.dca.filter.DataReductionFilter;
 import com.vodafone.dca.filter.LacCellFilter;

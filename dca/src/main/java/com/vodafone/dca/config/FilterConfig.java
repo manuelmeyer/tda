@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.vodafone.dca.domain.FilterBlackWhiteListProperties;
+import com.vodafone.dca.domain.properties.FilterBlackWhiteListProperties;
 import com.vodafone.dca.filter.InOrOutListBasedFilter;
 
 @Configuration

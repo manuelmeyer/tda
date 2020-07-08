@@ -1,4 +1,4 @@
-package com.vodafone.dca.domain;
+package com.vodafone.dca.domain.properties;
 
 import com.google.common.base.MoreObjects;
 import com.vodafone.dca.filter.DataReductionFilter.ReductionMode;
