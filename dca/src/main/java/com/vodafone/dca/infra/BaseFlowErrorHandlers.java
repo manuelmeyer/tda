@@ -8,10 +8,10 @@ public class BaseFlowErrorHandlers<R, T> {
 	private static final Logger LOG = LoggerFactory.getLogger(BaseFlowErrorHandlers.class);
 	
 	public void onFlowError(T input, Throwable t) {
-		LOG.error("error in flow - input is {}", input, t);
+		LOG.error("error in flow", t);
 	}
 	
 	public void onConverterFlowError(R input, Throwable t) {
-		LOG.error("converter error in flow  - input is {}", input, t);
+		LOG.error("converter error in flow", t);
 	}
 }

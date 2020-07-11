@@ -8,15 +8,6 @@ import com.google.common.collect.Lists;
 public class MultiInstancesProperties {
 	
 	private List<PerInstanceProperties> instances = Lists.newArrayList();
-	private FilterBlackWhiteListProperties filterBlackWhiteList = new FilterBlackWhiteListProperties();
-	
-	public FilterBlackWhiteListProperties getFilterBlackWhiteList() {
-		return filterBlackWhiteList;
-	}
-
-	public void setFilterBlackWhiteList(FilterBlackWhiteListProperties filterBlackWhiteList) {
-		this.filterBlackWhiteList = filterBlackWhiteList;
-	}
 
 	public List<PerInstanceProperties> getInstances() {
 		return instances;
@@ -24,14 +15,6 @@ public class MultiInstancesProperties {
 
 	public void setInstances(List<PerInstanceProperties> instances) {
 		this.instances = instances;
-	}
-
-	public PerInstanceProperties getInstance1() {
-		return instances.get(0);
-	}
-
-	public PerInstanceProperties getInstance2() {
-		return instances.get(1);
 	}
 
 	@Override

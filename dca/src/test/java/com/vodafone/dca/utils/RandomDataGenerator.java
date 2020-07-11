@@ -1,10 +1,12 @@
 package com.vodafone.dca.utils;
 
+import java.util.Date;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 
 import com.google.common.collect.Maps;
+import com.vodafone.dca.domain.DataTransporter;
 
 public class RandomDataGenerator {
 	
@@ -32,6 +34,15 @@ public class RandomDataGenerator {
 	
 	public static String generateString() {
 		return UUID.randomUUID().toString();
+	}
+	
+	public static DataTransporter generateEvent() {
+		DataTransporter event = new DataTransporter();
+		Map<String, Object> map = Maps.newHashMap();
+		String timeUTC = new Date().getTime() / 1000 + "000";
+		map.put("timeUTC", timeUTC);
+		event.setFields(map);
+		return event;
 	}
 	
 	public static Map<String, Object> generateRandomMap() {

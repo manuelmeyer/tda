@@ -28,6 +28,8 @@ runtime/logs
 /nbdist/
 /.nb-gradle/
 build/
+trash/
+runtime/capture
 
 ### VS Code ###
 .vscode/

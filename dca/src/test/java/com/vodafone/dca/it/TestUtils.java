@@ -1,11 +1,12 @@
 package com.vodafone.dca.it;
 
-import static java.nio.file.FileVisitOption.FOLLOW_LINKS;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static org.junit.Assert.assertEquals;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
@@ -21,6 +22,22 @@ import com.rabbitmq.client.ConnectionFactory;
 public class TestUtils {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(TestUtils.class);
+
+	public static String moveDemoSampleFileToTmp(String tmpDir, String file) throws Exception {
+		return moveDemoSampleFileToTmp(tmpDir, file, null);
+	}
+
+	public static String moveDemoSampleFileToTmp(String tmpDir, String file, String fileNameTarget) throws Exception {
+		Resource source = fileSystemOrClassPathResource(file);
+		String targetName = fileNameTarget == null
+					? source.getFile().getName()
+					: fileNameTarget;
+		Path targetFile = Paths.get(tmpDir, targetName);
+		Path copiedFile = Paths.get(tmpDir, targetName + ".cp");
+		Files.copy(Paths.get(source.getURI()), copiedFile, REPLACE_EXISTING);
+		Files.move(copiedFile, targetFile, REPLACE_EXISTING);
+		return targetFile.toString();
+	}
 
 	public static String loadFileData(String file) throws Exception {
 		Resource resource = fileSystemOrClassPathResource(file);
@@ -64,24 +81,34 @@ public class TestUtils {
 					break;
 				}
 			}
-			LOG.info("Finish writting");
+			LOG.info("Finish writting {} message(s)", totalSent);
 		} catch(Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 	
-	public static Stream<Path> generatedFiles(String tmpDir, String prefix) throws Exception {
-		return Files.find(Paths.get(tmpDir), 1, (path,  attributes) -> path.getFileName().toString().startsWith(prefix), FOLLOW_LINKS);
+	public static Stream<Path> generatedFiles(String tmpDir, String qualifier) {
+		try {
+			return Stream
+					.concat(
+						Files.find(Paths.get(tmpDir), 1, (path,  a) -> path.getFileName().toString().startsWith(qualifier)),
+						Files.find(Paths.get(tmpDir), 1, (path,  a) -> path.getFileName().toString().endsWith(qualifier))
+					);
+		} catch(Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	public static void cleanGeneratedFiles(String tmpDir, String... prefixes) throws Exception {
-		for(String prefix : prefixes) {
-			generatedFiles(tmpDir, prefix).forEach(file -> {
-					try {
-						Files.deleteIfExists(file);
-					} catch(Exception e) {}
-			});
-		}
+		Arrays.stream(prefixes)
+			.forEach(prefix -> generatedFiles(tmpDir, prefix).forEach(file -> safeDelete(file)));
+	}
+
+	private static void safeDelete(Path file) {
+		try {
+			LOG.info(" > deleting {}", file);
+			Files.deleteIfExists(file);
+		} catch(Exception e) {}
 	}
 
 	public static void assertGeneratedIsExpected(String tmpDir, String prefix, String referenceFile) throws Exception {

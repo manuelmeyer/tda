@@ -17,6 +17,17 @@ import java.util.Properties;
 
 public class FileUtils  {
 	
+	static public File changeSuffix(File source, String newSuffix) {
+		String targetName = source.getName();
+		int index = targetName.lastIndexOf(".");
+		if(index == -1) {
+			targetName += newSuffix;
+		} else {
+			targetName = targetName.substring(0, index) + newSuffix;
+		}
+		return new File(source.getParent() + "/" + targetName);
+	}
+	
 	static public File fileFromPath(String path) throws FileNotFoundException {
 		File file = new File(path);
 		boolean exists = file.isFile();

@@ -22,8 +22,8 @@ import com.google.common.collect.Maps;
  * @author manuelmeyer
  *
  */
-public class CSVToOffsetParser {
-	static private final Logger LOG = LoggerFactory.getLogger(CSVToOffsetParser.class);
+public class CsvBytesToOffsetParser {
+	static private final Logger LOG = LoggerFactory.getLogger(CsvBytesToOffsetParser.class);
 
 	private static final int START_OF_VALUE = 0;
 	private static final int IN_MAP = 1;

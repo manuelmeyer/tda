@@ -7,8 +7,8 @@ import org.springframework.integration.config.EnableIntegration;
 import org.springframework.integration.jmx.config.EnableIntegrationMBeanExport;
 
 @EnableIntegration
-@EnableIntegrationMBeanExport
 @EnableMBeanExport
+@EnableIntegrationMBeanExport
 @SpringBootApplication
 public class DcaApplication {
 

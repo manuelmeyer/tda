@@ -3,39 +3,36 @@ package com.vodafone.dca.transformer;
 import static com.vodafone.dca.common.FileUtils.getFieldsFromFile;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.IntStream;
 
 import javax.annotation.PostConstruct;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import com.google.common.collect.Maps;
 import com.vodafone.dca.domain.DataTransporter;
-import com.vodafone.dca.transformer.CSVToOffsetParser.Offset;
+import com.vodafone.dca.transformer.CsvBytesToOffsetParser.Offset;
 
-public class OffsetListToDataTransporter implements DataInputParser<Offset, byte[]> {
+public class ParsedElementListToDataTransporter {
 	
-	private static final Logger LOG = LoggerFactory.getLogger(OffsetListToDataTransporter.class);
+	private static final Logger LOG = LoggerFactory.getLogger(ParsedElementListToDataTransporter.class);
 	
-	@Value("${dca.input.filter-value:data}")
-	private String defaultFilterValue;
-
-	@Value("${dca.input.filter-field:}")
+	private String defaultFilterValue = "data";
+	private String filterField;
+	private List<String> names;
+		
 	public void setFilterField(String filterField) {
 		if(!StringUtils.isEmpty(filterField)) {
 			this.filterField = filterField;
 		}
 	}	
-	private String filterField;
-	
-	private List<String> names;
-		
-	@Value("${dca.input.field-definition:}")
+
 	public void setFieldNamesDefinitionFile(String path) {
 		if(!StringUtils.isEmpty(path)) {
 			try {
@@ -48,8 +45,7 @@ public class OffsetListToDataTransporter implements DataInputParser<Offset, byte
 		}
 	}
 	
-	@Value("${dca.input.field-names:}")
-	public void setFieldNames(String[] names) {
+	protected void setFieldNames(String[] names) {
 		if(names != null && names.length > 0) {
 			this.names = Arrays.asList(names);
 			LOG.info("Names for DataTransporter are [{}]", this.names);
@@ -60,33 +56,35 @@ public class OffsetListToDataTransporter implements DataInputParser<Offset, byte
 	public void checkHasNames() {
 		Assert.notEmpty(names, "field name collection cannot be empty");
 	}
-
-	@Override
-	public List<List<Offset>> parse(byte[] input) {
-		return CSVToOffsetParser.parse(input);
+	
+	public DataTransporter buildFromObjectList(List<Object> objects) {
+		return buildFromList(objects, o -> o);
 	}
 	
-	@SuppressWarnings("unchecked")
-	@Override
-	public DataTransporter buildFromList(List<Offset> objects) {
-		Map<String, Object>  map = new HashMap<String, Object>();		
-		int nameSize = names.size();
-		for(int index = 0; index < nameSize; index++) {
-			String name = names.get(index);
-			if(!name.startsWith("-")) {
-				Object value = objects.get(index).extractContent();
-				if(value instanceof Map) {
-					for(Map.Entry<String, Object> entry : ((Map<String, Object>)value).entrySet()) {
-						map.put(name + "." + entry.getKey(), entry.getValue());
-					}
-				} else {
-					map.put(name, value);
-				}
-			}
-		}
+	public DataTransporter buildFromOffsetList(List<Offset> objects) {
+		return buildFromList(objects, (o) -> o.extractContent());
+	}
+	
+	public <T> DataTransporter buildFromList(List<T> objects, Function<T, Object> transform) {
+		Map<String, Object>  map = Maps.newHashMap();	
+		IntStream.range(0, names.size())
+			.boxed()
+			.filter(index -> !names.get(index).startsWith("-"))
+			.forEach(index -> addToMap(names.get(index), transform.apply(objects.get(index)), map));
 		return new DataTransporter(map, filterValueFromMap(map));
 	}
-	
+			
+	@SuppressWarnings("unchecked")
+	private void addToMap(String name, Object value, Map<String, Object> map) {
+		if(value instanceof Map) {
+			for(Map.Entry<String, Object> entry : ((Map<String, Object>)value).entrySet()) {
+				map.put(name + "." + entry.getKey(), entry.getValue());
+			}
+		} else {
+			map.put(name, value);
+		}
+	}
+
 	protected String filterValueFromMap(Map<String, Object>  map) {
 		if(filterField == null) {
 			return defaultFilterValue;

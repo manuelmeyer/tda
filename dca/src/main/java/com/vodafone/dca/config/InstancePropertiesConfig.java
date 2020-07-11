@@ -7,10 +7,11 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.vodafone.dca.domain.properties.DemographicsInputProperties;
+import com.vodafone.dca.domain.properties.DemographicsOutputProperties;
 import com.vodafone.dca.domain.properties.FilterBlackWhiteListProperties;
 import com.vodafone.dca.domain.properties.MultiInstancesProperties;
 import com.vodafone.dca.domain.properties.MultiShellProcessorsProperties;
-import com.vodafone.dca.domain.properties.PerInstanceProperties;
 
 @Configuration
 @EnableConfigurationProperties
@@ -40,13 +41,14 @@ public class InstancePropertiesConfig {
 	}
 	
 	@Bean
-	public PerInstanceProperties instance1Properties() {
-		return multiInstancesProperties().getInstance1();
+	@ConfigurationProperties(prefix="dca.demographics.input")
+	public DemographicsInputProperties demographicsInputProperties() {
+		return new DemographicsInputProperties();
 	}
 	
 	@Bean
-	public PerInstanceProperties instance2Properties() {
-		return multiInstancesProperties().getInstance2();
+	@ConfigurationProperties(prefix="dca.demographics.output")
+	public DemographicsOutputProperties demographicsOutputProperties() {
+		return new DemographicsOutputProperties();
 	}
-
 }

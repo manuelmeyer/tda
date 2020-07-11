@@ -29,9 +29,9 @@ import com.vodafone.dca.filter.InOrOutListBasedFilter;
 import com.vodafone.dca.infra.BaseFlowErrorHandlers;
 import com.vodafone.dca.infra.RingBufferMessageDispatcher;
 import com.vodafone.dca.source.AmqpInboundChannel;
-import com.vodafone.dca.transformer.CSVToOffsetParser;
-import com.vodafone.dca.transformer.CSVToOffsetParser.Offset;
-import com.vodafone.dca.transformer.OffsetListToDataTransporter;
+import com.vodafone.dca.transformer.CsvBytesToOffsetParser;
+import com.vodafone.dca.transformer.CsvBytesToOffsetParser.Offset;
+import com.vodafone.dca.transformer.ParsedElementListToDataTransporter;
 
 @Configuration
 @Order(100)
@@ -39,11 +39,11 @@ public class SourceConfig {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(SourceConfig.class);
 	
-	@Value("${dca.source.rabbit.ring-buffer.size:128}")
-	private int amqpRingBufferSize;
+	@Value("${dca.source.ring-buffer.size:128}")
+	private int ringBufferSize;
 	
-	@Value("${dca.source.rabbit.ring-buffer.parallel-consumers:8}")
-	private int amqpRingBufferParallelConsumers;
+	@Value("${dca.source.ring-buffer.parallel-consumers:8}")
+	private int ringBufferParallelConsumers;
 	
 	@Autowired
 	private GenericApplicationContext applicationContext;
@@ -54,12 +54,8 @@ public class SourceConfig {
 	@Autowired
 	private InOrOutListBasedFilter whiteListFilter;
 	
-	@Bean
-	public OffsetListToDataTransporter offsetListToDataTransporter() {
-		return new OffsetListToDataTransporter();
-	}
-	
-	protected OffsetListToDataTransporter offsetListToDataTransporter;
+	@Autowired
+	private ParsedElementListToDataTransporter captureOffsetListToDataTransporter;
 	
 	private Map<String, RingBufferMessageDispatcher<List<DataTransporter>, List<DataTransporter>>> dispatchers = Maps.newHashMap();
 	
@@ -78,15 +74,13 @@ public class SourceConfig {
 			dispatchers.put(channelName, ringBuffer);
 			applicationContext.registerBean("rb-for-" + channelName, RingBufferMessageDispatcher.class, () -> ringBuffer);
 		});
-		
-		offsetListToDataTransporter = offsetListToDataTransporter();
 	}
 
 	protected RingBufferMessageDispatcher<List<DataTransporter>, List<DataTransporter>> createRingBufferDispatcher(String channelName, 
 					DirectChannel channelBean) {
 		return new RingBufferMessageDispatcher<List<DataTransporter>, List<DataTransporter>>()
 				.withThreadNamePrefix(channelName)
-				.withBufferSizeAndParallelConsumers(amqpRingBufferSize, amqpRingBufferParallelConsumers)
+				.withBufferSizeAndParallelConsumers(ringBufferSize, ringBufferParallelConsumers)
 				.withErrorHandlers(baseFlowErrorHandlers())
 				.withMessageHandler(dataTransporterList -> sendToChannel(channelBean, dataTransporterList))
 				.initialise();
@@ -107,10 +101,10 @@ public class SourceConfig {
 	}
 	
 	private void dispatchToRingBuffers(byte[] body) {
-		List<List<Offset>> offsetList = CSVToOffsetParser.parse(body);
+		List<List<Offset>> offsetList = CsvBytesToOffsetParser.parse(body);
 		List<DataTransporter> dataTransporters = offsetList
 				.stream()
-				.map(offsets -> offsetListToDataTransporter.buildFromList(offsets))
+				.map(offsets -> captureOffsetListToDataTransporter.buildFromOffsetList(offsets))
 				.filter(dataTransporter -> blackListFilter.accept(dataTransporter))
 				.filter(dataTransporter -> whiteListFilter.accept(dataTransporter))
 				.collect(Collectors.toList());

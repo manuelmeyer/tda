@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.SmartLifecycle;
 import org.springframework.core.convert.converter.Converter;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -20,10 +21,10 @@ import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.WorkHandler;
 import com.lmax.disruptor.dsl.Disruptor;
 
-public class RingBufferMessageDispatcher<T, R> {
+public class RingBufferMessageDispatcher<T, R> implements SmartLifecycle {
 
     private static final Logger LOG = LoggerFactory.getLogger(RingBufferMessageDispatcher.class);
-
+    
     private Disruptor<RingBufferMessage<T>> disruptor;
     private RingBufferMessageProducerWithTranslator producer;
     private RingBuffer<RingBufferMessage<T>> ringBuffer;
@@ -210,4 +211,29 @@ public class RingBufferMessageDispatcher<T, R> {
         }
         isRunning = false;
     }
+
+	@Override
+	public void start() {
+		LOG.info("Starting ring buffer");
+		isRunning = true;
+	}
+
+	@Override
+	public void stop() {
+		if(isRunning) {
+			LOG.info("Stopping ring buffer");
+			shutdown();
+		}
+		isRunning = false;
+	}
+
+	@Override
+	public boolean isRunning() {
+		return isRunning;
+	}
+
+	@Override
+	public int getPhase() {
+		return 0;
+	}
 }

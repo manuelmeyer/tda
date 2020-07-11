@@ -16,6 +16,7 @@ import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.integration.file.FileNameGenerator;
@@ -239,6 +240,12 @@ public class GenericFileNameGenerator implements FileNameGenerator {
 			}
 		}
 		String msg = (String) message.getPayload();
-		return fileInfo.getFileName(type, msg.length());
+		String fileName = fileInfo.getFileName(type, msg.length());;
+		LOG.info(">> file is {} writting {} lines", fileName, countLines(msg));
+		return fileName; //fileInfo.getFileName(type, msg.length());
+	}
+
+	private int countLines(String msg) {
+		return StringUtils.countMatches(msg, "\n");
 	}
 }

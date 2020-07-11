@@ -38,6 +38,7 @@ public class AmqpInboundChannel extends AbstractEndpoint {
 	private int qos;
 	
 	private boolean readyToListen = false;
+	private boolean isRunning = false;
 	
 	public boolean isReadyToListen() {
 		return readyToListen;
@@ -66,8 +67,12 @@ public class AmqpInboundChannel extends AbstractEndpoint {
 		
 		@Override
 		public void handleDelivery(String consumerTag, Envelope envelope, BasicProperties properties, byte[] body) throws IOException {
-			rabbitConsumer.accept(body, properties.getHeaders());
-            channel.basicAck(envelope.getDeliveryTag(), false);
+			LOG.trace("Delivery isRunning is {}", isRunning);
+			if(isRunning) {
+				LOG.trace("Received {} bytes from rabbit", body.length);
+				rabbitConsumer.accept(body, properties.getHeaders());
+				channel.basicAck(envelope.getDeliveryTag(), false);
+			}
 		}
 	}
 	
@@ -135,7 +140,7 @@ public class AmqpInboundChannel extends AbstractEndpoint {
         factory.setHost(host);
         factory.setPort(port);
         Connection connection = factory.newConnection();
-
+        
         channel = connection.createChannel();
         channel.basicQos(qos);
         LOG.info("Creating a channel with a QoS of {}", qos);
@@ -145,6 +150,7 @@ public class AmqpInboundChannel extends AbstractEndpoint {
 
 	@Override
 	protected void doStart() {
+		isRunning = true;
 		LOG.info("Requested to start");
 		try {
 			startListeners();
@@ -156,11 +162,14 @@ public class AmqpInboundChannel extends AbstractEndpoint {
 
 	@Override
 	protected void doStop() {
-		LOG.info("Requested to stop");
+		isRunning = false;
+		LOG.info("Requested to stop - give a grace delay for listeners");
 		try {
+			Thread.sleep(2000); // leave time for listeners to flush their message and ack.
 			channel.close();
 		} catch(Exception e) {
 			LOG.error("Error while closing channel", e);
 		}
+		LOG.info("AMQP is stopped");
 	}
 }
