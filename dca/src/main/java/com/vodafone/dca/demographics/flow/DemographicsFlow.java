@@ -5,6 +5,7 @@ import java.io.File;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.dsl.IntegrationFlow;
@@ -17,9 +18,10 @@ import org.springframework.messaging.MessageChannel;
 
 import com.vodafone.dca.domain.properties.DemographicsInputProperties;
 import com.vodafone.dca.handler.DemographicsFileMoveHandler;
-import com.vodafone.dca.handler.FileChunkDispatcher;
+import com.vodafone.dca.handler.DemographicFileOutputWriter;
 
 @Configuration
+@ConditionalOnProperty("demographics.enabled")
 public class DemographicsFlow {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(DemographicsFlow.class);
@@ -31,7 +33,7 @@ public class DemographicsFlow {
 	private DemographicsFileMoveHandler demographicsFileMoveHandler;
 	
 	@Autowired
-	private FileChunkDispatcher fileChunkDispatcher;
+	private DemographicFileOutputWriter fileChunkDispatcher;
 	
 	@Bean(name = "demographicsProcessingFlowChannel")
 	public MessageChannel demographicsProcessingFlowChannel() {

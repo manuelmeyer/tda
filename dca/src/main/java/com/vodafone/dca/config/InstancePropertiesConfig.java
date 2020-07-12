@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Configuration;
 import com.vodafone.dca.domain.properties.DemographicsInputProperties;
 import com.vodafone.dca.domain.properties.DemographicsOutputProperties;
 import com.vodafone.dca.domain.properties.FilterBlackWhiteListProperties;
+import com.vodafone.dca.domain.properties.MultiDemographicsProperties;
 import com.vodafone.dca.domain.properties.MultiInstancesProperties;
 import com.vodafone.dca.domain.properties.MultiShellProcessorsProperties;
 
@@ -41,13 +42,19 @@ public class InstancePropertiesConfig {
 	}
 	
 	@Bean
-	@ConfigurationProperties(prefix="dca.demographics.input")
+	@ConfigurationProperties(prefix = "dca")
+	public MultiDemographicsProperties multiDemographicsProperties() {
+		return new MultiDemographicsProperties();
+	}
+	
+	@Bean
+	@ConfigurationProperties(prefix="dca.demographics[0].input")
 	public DemographicsInputProperties demographicsInputProperties() {
 		return new DemographicsInputProperties();
 	}
 	
 	@Bean
-	@ConfigurationProperties(prefix="dca.demographics.output")
+	@ConfigurationProperties(prefix="dca.demographics[0].output")
 	public DemographicsOutputProperties demographicsOutputProperties() {
 		return new DemographicsOutputProperties();
 	}

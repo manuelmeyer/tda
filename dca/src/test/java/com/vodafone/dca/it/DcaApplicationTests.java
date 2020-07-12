@@ -10,6 +10,8 @@ import static com.vodafone.dca.it.TestUtils.sendMessages;
 import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.assertNotNull;
 
+import java.io.File;
+
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -24,9 +26,9 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.rabbitmq.client.Channel;
-import com.vodafone.dca.domain.properties.DemographicsInputProperties;
-import com.vodafone.dca.domain.properties.DemographicsOutputProperties;
+import com.vodafone.dca.common.FileUtils;
 import com.vodafone.dca.domain.properties.FilterBlackWhiteListProperties;
+import com.vodafone.dca.domain.properties.MultiDemographicsProperties;
 import com.vodafone.dca.domain.properties.MultiInstancesProperties;
 import com.vodafone.dca.domain.properties.MultiShellProcessorsProperties;
 import com.vodafone.dca.source.AmqpInboundChannel;
@@ -35,13 +37,26 @@ import com.vodafone.dca.source.AmqpInboundChannel;
 @RunWith(SpringRunner.class)
 @TestPropertySource(properties = {
 		
-	"dca.demographics.input.field-definition=demographics/demographics-in.def",
-	"dca.demographics.input.file-directory=${java.io.tmpdir}",
-	"dca.demographics.input.file-pattern=*.dat",
-	"dca.demographics.input.file-poll-rate=400",
+	"dca.demographics-input-field-definition=demographics/demographics-in.def",
 	
-	"dca.demographics.output.field-definition=demographics/demographics-in.def",
-	"dca.demographics.output.end-script=demographics/endscript.sh",
+	"dca.demographics[0].enabled=true",
+	"dca.demographics[0].name=DM1",
+	"dca.demographics[0].input.field-definition=demographics/demographics-in.def",
+	"dca.demographics[0].input.file-directory=${java.io.tmpdir}",
+	"dca.demographics[0].input.file-pattern=*0.dat",
+	"dca.demographics[0].input.file-poll-rate=400",	
+	"dca.demographics[0].output.field-definition=demographics/demographics-in.def",
+	"dca.demographics[0].output.end-script=demographics/endscript.sh",
+	
+	"dca.demographics[1].enabled=true",
+	"dca.demographics[1].name=DM2",
+	"dca.demographics[1].input.field-definition=demographics/demographics-in.def",
+	"dca.demographics[1].input.file-directory=${java.io.tmpdir}",
+	"dca.demographics[1].input.file-pattern=*1.dat",
+	"dca.demographics[1].input.file-poll-rate=400",	
+	"dca.demographics[1].output.field-definition=demographics/demographics-in.def",
+	"dca.demographics[1].output.end-script=demographics/endscript.sh",
+	"dca.demographics[1].output.anonymise-fields=imsi",
 	
 	"dca.input.field-definition:test-refdata/input.def",
 	
@@ -98,11 +113,8 @@ public class DcaApplicationTests {
 	MultiShellProcessorsProperties multiShellProcessorProperties;
 	
 	@Autowired
-	DemographicsInputProperties demographicsInputProperties;
-
-	@Autowired
-	DemographicsOutputProperties demographicsOutputProperties;
-
+	MultiDemographicsProperties multiDemographicsProperties;
+	
 	@Value("${java.io.tmpdir}")
 	String tmpDir;
 	
@@ -113,6 +125,8 @@ public class DcaApplicationTests {
 		await().until(() -> amqpInboundChannel.isReadyToListen());
 		amqpChannel = createAMQPChannel();
 		cleanGeneratedFiles(tmpDir, "instance1", "instance2", ".dat", ".processing", ".csv", ".new");
+		File shellScript = FileUtils.fileFromPath("demographics/endscript.sh");
+		shellScript.setExecutable(true);
 	}
 	
 	@Test
@@ -126,11 +140,8 @@ public class DcaApplicationTests {
 		assertNotNull(filterBlackWhiteListProperties);
 		LOG.info("filterBlackWhiteListProperties is {}", filterBlackWhiteListProperties);
 		
-		assertNotNull(demographicsInputProperties);
-		LOG.info("demographicsInputProperties is {}", demographicsInputProperties);
-
-		assertNotNull(demographicsOutputProperties);
-		LOG.info("demographicsOutputProperties is {}", demographicsOutputProperties);
+		assertNotNull(multiDemographicsProperties);
+		LOG.info("multiDemographicsProperties is {}", multiDemographicsProperties);
 	}
 
 	@Test
@@ -147,10 +158,16 @@ public class DcaApplicationTests {
 	
 	@Test
 	public void canBuildDemographics() throws Exception {
-		String targetFile = moveDemoSampleFileToTmp(tmpDir, "demographics/simple.dat");
-		LOG.info("Target file is {}", targetFile);
-		await().until(() -> generatedFiles(tmpDir, ".csv").count() == 1);
-		assertGeneratedIsExpected(tmpDir, ".csv", "demographics/demo1/simple.csv.expected");
+		String targetFile0 = moveDemoSampleFileToTmp(tmpDir, "demographics/simple.dat", "simple0.dat");
+		String targetFile1 = moveDemoSampleFileToTmp(tmpDir, "demographics/simple.dat", "simple1.dat");
+		
+		LOG.info("Target file are {} and {}", targetFile0, targetFile1);
+		
+		await().until(() -> generatedFiles(tmpDir, "0.csv").count() == 1);
+		await().until(() -> generatedFiles(tmpDir, "1.csv").count() == 1);
+		
+		assertGeneratedIsExpected(tmpDir, "0.csv", "demographics/demo0/simple.csv.expected");
+		assertGeneratedIsExpected(tmpDir, "1.csv", "demographics/demo1/simple.csv.expected");
 	}
 	
 	protected void sendRabbitMessageAndCheckGeneratedIsExpectedFor(String fileSample) throws Exception {

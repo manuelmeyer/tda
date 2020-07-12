@@ -1,12 +1,12 @@
 package com.vodafone.dca.config;
 
+import static com.vodafone.dca.common.BeanUtils.register;
 import static com.vodafone.dca.common.DcaChannelNames.DCA_EVENT_INPUT_CHANNEL_FLOW_PREFIX;
 import static com.vodafone.dca.common.DcaChannelNames.DCA_EVENT_OUTPUT_CHANNEL_FLOW_PREFIX;
 import static com.vodafone.dca.common.DcaChannelNames.NULL_CHANNEL;
 import static org.springframework.integration.file.support.FileExistsMode.APPEND;
 
 import java.io.File;
-import java.util.UUID;
 
 import javax.annotation.PostConstruct;
 
@@ -26,6 +26,7 @@ import org.springframework.integration.dsl.context.IntegrationFlowContext;
 import org.springframework.integration.file.dsl.Files;
 import org.springframework.util.StringUtils;
 
+import com.vodafone.dca.common.BeanUtils;
 import com.vodafone.dca.domain.DataTransporter;
 import com.vodafone.dca.domain.properties.LacCellFilterProperties;
 import com.vodafone.dca.domain.properties.MultiInstancesProperties;
@@ -56,6 +57,7 @@ public class DynamicInstancesFlowConfig {
 	private IntegrationFlowContext integrationFlowContext;
 	
 	class InstanceContext {
+		String name;
 		DirectChannel inputChannel;
 		DirectChannel outputChannel;
 		
@@ -72,6 +74,7 @@ public class DynamicInstancesFlowConfig {
 		
 		InstanceContext(PerInstanceProperties instance) {
 			this.instance = instance;
+			this.name = instance.getName();
 		}
 	}
 	
@@ -102,7 +105,7 @@ public class DynamicInstancesFlowConfig {
 	}
 	
 	protected void createReductionMapHandler(InstanceContext instanceContext) {
-		instanceContext.reductionMapHandler = register(instanceContext, new ReductionMapHandler(), ReductionMapHandler.class);
+		instanceContext.reductionMapHandler = register(applicationContext, instanceContext.name, new ReductionMapHandler(), ReductionMapHandler.class);
 	}
 
 	protected void createAndRegisterPepperManager(InstanceContext instanceContext) {
@@ -111,27 +114,16 @@ public class DynamicInstancesFlowConfig {
 		if (StringUtils.isEmpty(pepper)) {
 			pepperManager.setPepper(pepper);
 		}
-		instanceContext.pepperManager = register(instanceContext, pepperManager, PepperManager.class);
+		instanceContext.pepperManager = BeanUtils.register(applicationContext, instanceContext.name, pepperManager, PepperManager.class);
 	}
 	
-	@SuppressWarnings("unchecked")
-	protected <T> T register(InstanceContext instanceContext, T bean, Class<T> clazz) {
-		String beanName = beanName(instanceContext, bean);
-		applicationContext.registerBean(beanName, clazz, () -> bean);
-		return (T)applicationContext.getBean(beanName);
-	}
-	
-	protected <T> String beanName(InstanceContext instanceContext, T bean) {
-		return instanceContext.instance.getName() + "-" + bean.getClass().getSimpleName() + "-" + UUID.randomUUID().toString();
-	}
-
 	protected void createAndRegisterMapFieldReducer(InstanceContext instanceContext) {
 		OutputProperties output = instanceContext.instance.getOutput();
 		MapFieldReducer mapFieldReducer = new MapFieldReducer();
 		mapFieldReducer.setPepperManager(instanceContext.pepperManager);
 		mapFieldReducer.setFieldsOutDefinitionFile(output.getFieldDefinition());
 		mapFieldReducer.setAnonymiseSet(output.getAnonymiseFields());
-		instanceContext.mapFieldReducer = register(instanceContext, mapFieldReducer, MapFieldReducer.class);
+		instanceContext.mapFieldReducer = register(applicationContext, instanceContext.name, mapFieldReducer, MapFieldReducer.class);
 	}
 
 	protected void createAndRegisterFileGenerator(InstanceContext instanceContext) {
@@ -140,19 +132,19 @@ public class DynamicInstancesFlowConfig {
 		fileNameGenerator.setDirectory(output.getFileDirectory());
 		fileNameGenerator.setFilePrefix(output.getFilePrefix());
 		fileNameGenerator.setFileSizeThreshold(output.getFileSizeThreshold());
-		instanceContext.fileNameGenerator = register(instanceContext, fileNameGenerator, GenericFileNameGenerator.class);
+		instanceContext.fileNameGenerator = register(applicationContext, instanceContext.name, fileNameGenerator, GenericFileNameGenerator.class);
 	}
 
 	protected void createAndRegisterDataReductionFilter(InstanceContext instanceContext) {
 		DataReductionFilter dataReductionFilter = new DataReductionFilter();
 		dataReductionFilter.setReductionMapHandler(instanceContext.reductionMapHandler);
 		dataReductionFilter.setReductionMode(instanceContext.instance.getFilter().getReduction().getMode());
-		instanceContext.dataReductionFilter = register(instanceContext, dataReductionFilter, DataReductionFilter.class);
+		instanceContext.dataReductionFilter = register(applicationContext, instanceContext.name, dataReductionFilter, DataReductionFilter.class);
 	}
 
 	protected void createAndRegisterLacCellFilter(InstanceContext instanceContext) {
 		LacCellFilterProperties lacCellFilter = instanceContext.instance.getFilter().getLacCell();
-		instanceContext.lacCellFilter = register(instanceContext, 
+		instanceContext.lacCellFilter = register(applicationContext, instanceContext.name, 
 				LacCellFilter.newBuilder()
 					.withFileScanFrequency(lacCellFilter.getFileScanFrequency())
 					.withLacCellFields(lacCellFilter.getLacField(), lacCellFilter.getCellTowerField())
@@ -165,7 +157,7 @@ public class DynamicInstancesFlowConfig {
 	
 	protected void createAndRegisterAccumulator(InstanceContext instanceContext) {
 		OutputProperties output = instanceContext.instance.getOutput();
-		instanceContext.accumulator = register(instanceContext, 
+		instanceContext.accumulator = register(applicationContext, instanceContext.name, 
 				new AccumulatorEventHandler(instanceContext.instance.getName(), 
 					instanceContext.outputChannel, 
 					output.getBatchSize(), 
@@ -240,7 +232,7 @@ public class DynamicInstancesFlowConfig {
 		LacCellReductionFilter lacCellReductionFilter = new LacCellReductionFilter();
 		lacCellReductionFilter.setDataReductionFilter(instanceContext.dataReductionFilter);
 		lacCellReductionFilter.setLacCellFilter(instanceContext.lacCellFilter);
-		instanceContext.lacCellReductionFilter = register(instanceContext, lacCellReductionFilter, LacCellReductionFilter.class);
+		instanceContext.lacCellReductionFilter = register(applicationContext, instanceContext.name, lacCellReductionFilter, LacCellReductionFilter.class);
 	}
 
 	protected void createAndRegisterInputChannel(InstanceContext instanceContext) {

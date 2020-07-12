@@ -11,7 +11,7 @@ public class FileChunkDispatcherTest {
 	
 	@Test
 	public void canDispacthFileChunks() throws Exception {
-		FileChunkDispatcher underTest = new FileChunkDispatcher();
+		DemographicFileOutputWriter underTest = new DemographicFileOutputWriter();
 		Resource resource = TestUtils.fileSystemOrClassPathResource("demographics/analytics.smpl");
 		File input = resource.getFile();
 		underTest.generateOutputFile(input);

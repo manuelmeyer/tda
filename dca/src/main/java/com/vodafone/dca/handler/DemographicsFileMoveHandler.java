@@ -9,18 +9,12 @@ import java.nio.file.Paths;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import com.vodafone.dca.domain.properties.DemographicsInputProperties;
-
-public class DemographicsFileMoveHandler {
+public abstract class DemographicsFileMoveHandler {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(DemographicsFileMoveHandler.class);
 	
-	@Autowired
-	private DemographicsInputProperties demographicsProperties;
-	
-	public File changeFileName(File source, String newSuffix) {
+	public static File changeFileName(File source, String newSuffix) {
 		File target = null;
 		try {
 			target = changeSuffix(source, newSuffix);

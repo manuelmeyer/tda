@@ -29,12 +29,9 @@ import com.vodafone.dca.shell.SpawnProcess;
 import com.vodafone.dca.transformer.MapFieldReducer;
 import com.vodafone.dca.transformer.ParsedElementListToDataTransporter;
 
-public class FileChunkDispatcher {
+public class DemographicFileOutputWriter {
 	
-	private static final Logger LOG = LoggerFactory.getLogger(FileChunkDispatcher.class);
-	
-	@Autowired
-	private DelimitedLineTokenizer delimitedLineTokenizer;
+	private static final Logger LOG = LoggerFactory.getLogger(DemographicFileOutputWriter.class);
 	
 	@Autowired
 	private InOrOutListBasedFilter blackListFilter;
@@ -42,19 +39,18 @@ public class FileChunkDispatcher {
 	@Autowired
 	private InOrOutListBasedFilter whiteListFilter;
 	
-	@Autowired
-	private ParsedElementListToDataTransporter demographicsOffsetListToDataTransporter;
+	private DelimitedLineTokenizer lineTokenizer;
 	
-	@Autowired
-	private MapFieldReducer demographicsFieldReducer;
+	private ParsedElementListToDataTransporter parser;
 	
-	@Autowired
-	private DemographicsOutputProperties demographicsOutputProperties;
+	private MapFieldReducer reducer;
+	
+	private DemographicsOutputProperties outputProperties;
 	
 	private TaskExecutor taskExecutor = new SimpleAsyncTaskExecutor();
 	
 	public File generateOutputFile(File input) {
-		LOG.info("Dispatching {}", input);
+		LOG.info("Creating demographics from {}", input);
 		List<DataTransporter> dispatchList = Lists.newArrayList();
 		
 		try (BufferedReader reader = new BufferedReader(new FileReader(input), 4 * 1024 * 1024)) {
@@ -68,7 +64,6 @@ public class FileChunkDispatcher {
 			}
 			
 			if(!dispatchList.isEmpty()) {
-				LOG.info("flushing {} items", dispatchList.size());
 				writer.write(dispatchList);
 			}
 			writer.close();
@@ -86,21 +81,21 @@ public class FileChunkDispatcher {
 		};
 		File workingDirectory = null;
 		FutureTask<Integer> systemCommandTask = 
-				new FutureTask<Integer>(new SpawnProcess(fileFromPath(demographicsOutputProperties.getEndScript()).getAbsolutePath(), 
+				new FutureTask<Integer>(new SpawnProcess(fileFromPath(outputProperties.getEndScript()).getAbsolutePath(), 
 																							environmentParams, 
 																							workingDirectory));
 		taskExecutor.execute(systemCommandTask);
 		int status = systemCommandTask.get();
-		LOG.info("{} exit status {}", demographicsOutputProperties.getEndScript(), status);
+		LOG.debug("{} exit status {}", outputProperties.getEndScript(), status);
 	}
 
 	private void writeLineToOutput(List<DataTransporter> dispatchList, String line, 
 									FlatFileItemWriter<DataTransporter> writer) throws Exception {
 		DataTransporter dataTransporter = 
-				demographicsOffsetListToDataTransporter.buildFromObjectList(Arrays.asList(delimitedLineTokenizer.tokenize(line).getValues()));
+				parser.buildFromObjectList(Arrays.asList(lineTokenizer.tokenize(line).getValues()));
 		if(blackListFilter.accept(dataTransporter) && whiteListFilter.accept(dataTransporter)) {
 			dispatchList.add(dataTransporter);
-			if(dispatchList.size() == demographicsOutputProperties.getBatchSize()) {
+			if(dispatchList.size() == outputProperties.getBatchSize()) {
 				LOG.info("1.writing {} items", dispatchList.size());
 				writer.write(dispatchList);
 				dispatchList.clear();
@@ -109,13 +104,51 @@ public class FileChunkDispatcher {
 	}
 
 	private FlatFileItemWriter<DataTransporter> newFlatFileItemWriter(File targetFile) throws Exception {
+		LOG.info("Creating FlatFileWriter for {}", targetFile);
 		FlatFileItemWriter<DataTransporter> writer = new FlatFileItemWriter<>();
 		Resource resource = new FileSystemResource(targetFile);
 		writer.setResource(resource);
 		writer.setSaveState(false);
-		writer.setLineAggregator(dataTransporter -> demographicsFieldReducer.convert(dataTransporter));
+		writer.setLineAggregator(dataTransporter -> reducer.convert(dataTransporter));
 		writer.afterPropertiesSet();
 		writer.open(new ExecutionContext());
 		return writer;
+	}
+	
+	static public Builder newBuilder() {
+		return new Builder();
+	}
+	
+	public static class Builder {
+		
+		private DelimitedLineTokenizer lineTokenizer;
+		private ParsedElementListToDataTransporter parser;
+		private MapFieldReducer reducer;
+		private DemographicsOutputProperties outputProperties;
+
+		public Builder withLineTokeniserAndParser(DelimitedLineTokenizer lineTokenizer, ParsedElementListToDataTransporter parser) {
+			this.lineTokenizer = lineTokenizer;
+			this.parser = parser;
+			return this;
+		}
+		
+		public Builder withReducer(MapFieldReducer reducer) {
+			this.reducer = reducer;
+			return this;
+		}
+		
+		public Builder withOutputProperties(DemographicsOutputProperties outputProperties) {
+			this.outputProperties = outputProperties;
+			return this;
+		}
+		
+		public DemographicFileOutputWriter build() {
+			DemographicFileOutputWriter built = new DemographicFileOutputWriter();
+			built.lineTokenizer = this.lineTokenizer;
+			built.outputProperties = this.outputProperties;
+			built.parser = this.parser;
+			built.reducer = this.reducer;
+			return built;
+		}
 	}
 }

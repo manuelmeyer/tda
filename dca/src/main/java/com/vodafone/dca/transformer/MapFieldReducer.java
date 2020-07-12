@@ -11,7 +11,6 @@ import java.util.Set;
 
 import javax.annotation.PostConstruct;
 
-import org.assertj.core.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.convert.converter.Converter;

@@ -15,7 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Properties;
 
-public class FileUtils  {
+public abstract class FileUtils  {
 	
 	static public File changeSuffix(File source, String newSuffix) {
 		String targetName = source.getName();

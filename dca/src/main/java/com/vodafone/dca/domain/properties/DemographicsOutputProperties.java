@@ -10,7 +10,16 @@ public class DemographicsOutputProperties {
 	private String fieldDefinition;
 	private String fileSuffixProcessing = ".processing";
 	private int batchSize = 10_000;
+	private String salt;
 	
+	public String getSalt() {
+		return salt;
+	}
+
+	public void setSalt(String salt) {
+		this.salt = salt;
+	}
+
 	public int getBatchSize() {
 		return batchSize;
 	}
@@ -51,11 +60,11 @@ public class DemographicsOutputProperties {
 		this.fileDirectory = fileDirectory;
 	}
 	
-	public String[] getAnonymize() {
+	public String[] getAnonymiseFields() {
 		return anonymize;
 	}
 	
-	public void setAnonymize(String[] anonymize) {
+	public void setAnonymiseFields(String[] anonymize) {
 		this.anonymize = anonymize;
 	}
 	
@@ -67,6 +76,7 @@ public class DemographicsOutputProperties {
 				.add("endScript", endScript)
 				.add("fieldDefinition", fieldDefinition)
 				.add("batchSize", batchSize)
+				.add("salt", salt)
 				.toString();
 	}
 }
