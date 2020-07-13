@@ -19,12 +19,12 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.integration.core.GenericSelector;
 
 import com.google.common.collect.Lists;
 import com.vodafone.dca.common.FileUtils;
 import com.vodafone.dca.domain.DataTransporter;
 import com.vodafone.dca.domain.properties.DemographicsOutputProperties;
-import com.vodafone.dca.filter.InOrOutListBasedFilter;
 import com.vodafone.dca.shell.SpawnProcess;
 import com.vodafone.dca.transformer.MapFieldReducer;
 import com.vodafone.dca.transformer.ParsedElementListToDataTransporter;
@@ -34,10 +34,10 @@ public class DemographicFileOutputWriter {
 	private static final Logger LOG = LoggerFactory.getLogger(DemographicFileOutputWriter.class);
 	
 	@Autowired
-	private InOrOutListBasedFilter blackListFilter;
+	private GenericSelector<DataTransporter> blackListFilter;
 	
 	@Autowired
-	private InOrOutListBasedFilter whiteListFilter;
+	private GenericSelector<DataTransporter> whiteListFilter;
 	
 	private DelimitedLineTokenizer lineTokenizer;
 	

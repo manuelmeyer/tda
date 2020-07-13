@@ -23,7 +23,7 @@ import com.google.common.collect.Maps;
  *
  */
 public class CsvBytesToOffsetParser {
-	static private final Logger LOG = LoggerFactory.getLogger(CsvBytesToOffsetParser.class);
+	static private final Logger LOG = LoggerFactory.getLogger(CsvBytesToOffsetParserTest.class);
 
 	private static final int START_OF_VALUE = 0;
 	private static final int IN_MAP = 1;

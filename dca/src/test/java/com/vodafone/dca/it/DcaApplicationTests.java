@@ -3,15 +3,18 @@ package com.vodafone.dca.it;
 import static com.vodafone.dca.it.TestUtils.assertGeneratedIsExpected;
 import static com.vodafone.dca.it.TestUtils.cleanGeneratedFiles;
 import static com.vodafone.dca.it.TestUtils.createAMQPChannel;
+import static com.vodafone.dca.it.TestUtils.fileExists;
 import static com.vodafone.dca.it.TestUtils.generatedFiles;
 import static com.vodafone.dca.it.TestUtils.loadFileData;
 import static com.vodafone.dca.it.TestUtils.moveDemoSampleFileToTmp;
 import static com.vodafone.dca.it.TestUtils.sendMessages;
 import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -57,7 +60,7 @@ import com.vodafone.dca.source.AmqpInboundChannel;
 	"dca.demographics[1].output.field-definition=demographics/demographics-in.def",
 	"dca.demographics[1].output.end-script=demographics/endscript.sh",
 	"dca.demographics[1].output.anonymise-fields=imsi",
-	
+		
 	"dca.input.field-definition:test-refdata/input.def",
 	
 	"dca.filter-bw-list.white-list-file=test-refdata/white-list.csv",
@@ -84,6 +87,16 @@ import com.vodafone.dca.source.AmqpInboundChannel;
 	"dca.instances[1].output.field-definition=test-refdata/instance2/output.def",
 	"dca.instances[1].output.file-directory=${java.io.tmpdir}",
 	"dca.instances[1].output.file-size-threshold=100000",
+	
+	"dca.instances[2].enabled=true",
+	"dca.instances[2].name=instance3",
+	"dca.instances[2].template=ROAMERS",
+//	"dca.instances[2].filter.lac-cell.lac-cell-file=test-refdata/instance2/lac-cells.csv",
+	"dca.instances[2].filter.reduction.mode=IMSIS_CHANGE_CELL",
+//	"dca.instances[2].output.anonymise-fields=imsi",
+	"dca.instances[2].output.field-definition=test-refdata/instance2/output.def",
+	"dca.instances[2].output.file-directory=${java.io.tmpdir}",
+	"dca.instances[2].output.file-size-threshold=100000",
 	
 	"dca.source.rabbit.properties-file=test-refdata/rabbit.properties",
 	
@@ -124,7 +137,7 @@ public class DcaApplicationTests {
 	public void cleanTempFilesAndWaitReadyToListen() throws Exception {
 		await().until(() -> amqpInboundChannel.isReadyToListen());
 		amqpChannel = createAMQPChannel();
-		cleanGeneratedFiles(tmpDir, "instance1", "instance2", ".dat", ".processing", ".csv", ".new");
+		cleanGeneratedFiles(tmpDir, "instance1", "instance2", "instance3", ".dat", ".processing", ".csv", ".new");
 		File shellScript = FileUtils.fileFromPath("demographics/endscript.sh");
 		shellScript.setExecutable(true);
 	}
@@ -183,6 +196,15 @@ public class DcaApplicationTests {
 		await().until(() -> generatedFiles(tmpDir, "instance2").count() == 1);
 		assertGeneratedIsExpected(tmpDir, "instance2", "generated-expected/instance2/" + fileSample + ".expected");
 		
-		cleanGeneratedFiles(tmpDir, "instance1", "instance2", ".dat");
+		if(fileExists("generated-expected/instance3/" + fileSample + ".expected")) {
+			LOG.info(" - instance3");
+			await().until(() -> generatedFiles(tmpDir, "instance3").count() == 1);
+			assertGeneratedIsExpected(tmpDir, "instance3", "generated-expected/instance3/" + fileSample + ".expected");
+		} else {
+			LOG.info(" - instance3 - no files expected");
+			assertTrue(generatedFiles(tmpDir, "instance3").count() == 0);
+		}
+		
+		cleanGeneratedFiles(tmpDir, "instance1", "instance2", "instance3", ".dat");
 	}
 }

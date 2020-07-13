@@ -1,5 +1,6 @@
 package com.dell.rti4t.xd.transformer;
 
+import static com.dell.rti4t.xd.testutil.EventTestBuilder.buildEvent;
 import static com.dell.rti4t.xd.testutil.EventTestBuilder.generateEvent;
 import static com.dell.rti4t.xd.testutil.EventTestBuilder.generateIntInRange;
 import static com.dell.rti4t.xd.testutil.EventTestBuilder.generateString;
@@ -23,6 +24,27 @@ import com.google.common.collect.Sets;
 public class TestPepperManager {
 	
 	static private final Logger LOG = LoggerFactory.getLogger(TestPepperManager.class);
+	
+	@Test
+	public void canChangeOnCronTimer() throws Exception {
+		PepperManagerImpl pepperManager = new PepperManagerImpl();
+		pepperManager.setCronTrigger("*/2 * * * * *");
+		pepperManager.afterPropertiesSet();
+		
+		Set<String> peppers = Sets.newHashSet();
+		Date now = new Date();
+		DataTransporter event = generateEvent();
+		event.putFieldValue("timeUTC", now.getTime()/1000 + "000");
+		LOG.info("event is {}", event);
+		
+		for(int index = 0; index < 10; index++) {
+			String pepper = pepperManager.getSaltForTime(event);
+			LOG.info(" >> pepper is {}", pepper);
+			peppers.add(pepper);
+			Thread.sleep(2300);
+		}
+		assertEquals(10, peppers.size());
+	}
 	
 	@Test
 	public void canGetNextDateAndDelta() {

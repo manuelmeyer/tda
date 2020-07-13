@@ -122,4 +122,8 @@ public class TestUtils {
 		}
 		assertEquals(expectedContent, generatedContent);		
 	}
+
+	public static boolean fileExists(String expectedName) {
+		return fileSystemOrClassPathResource(expectedName).exists();
+	}
 }

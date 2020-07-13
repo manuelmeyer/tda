@@ -135,7 +135,7 @@ public class DataReductionFilter implements GenericSelector<DataTransporter> {
 	}
 
 	@PostConstruct
-	public void setReductionHandlerProperties() throws Exception {
+	public void initReductionFilter() throws Exception {
 		if(mode == ReductionMode.NONE) {
 			LOG.info("NO data reduction in place");
 			return;

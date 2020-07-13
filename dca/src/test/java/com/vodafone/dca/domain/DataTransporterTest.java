@@ -1,8 +1,8 @@
 package com.vodafone.dca.domain;
 
-import static com.vodafone.dca.utils.RandomDataGenerator.generateIntInRange;
-import static com.vodafone.dca.utils.RandomDataGenerator.generateRandomMap;
-import static com.vodafone.dca.utils.RandomDataGenerator.generateString;
+import static com.vodafone.dca.utils.RandomBasedTestObjectGenerator.generateIntInRange;
+import static com.vodafone.dca.utils.RandomBasedTestObjectGenerator.generateRandomMap;
+import static com.vodafone.dca.utils.RandomBasedTestObjectGenerator.generateString;
 import static java.lang.Thread.currentThread;
 import static java.lang.Thread.sleep;
 import static org.junit.Assert.assertEquals;

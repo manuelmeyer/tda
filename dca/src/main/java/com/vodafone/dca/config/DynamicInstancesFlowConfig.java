@@ -3,6 +3,7 @@ package com.vodafone.dca.config;
 import static com.vodafone.dca.common.BeanUtils.register;
 import static com.vodafone.dca.common.DcaChannelNames.DCA_EVENT_INPUT_CHANNEL_FLOW_PREFIX;
 import static com.vodafone.dca.common.DcaChannelNames.DCA_EVENT_OUTPUT_CHANNEL_FLOW_PREFIX;
+import static com.vodafone.dca.common.DcaChannelNames.DCA_ROAMERS_INPUT_CHANNEL_FLOW_PREFIX;
 import static com.vodafone.dca.common.DcaChannelNames.NULL_CHANNEL;
 import static org.springframework.integration.file.support.FileExistsMode.APPEND;
 
@@ -27,7 +28,9 @@ import org.springframework.integration.file.dsl.Files;
 import org.springframework.util.StringUtils;
 
 import com.vodafone.dca.common.BeanUtils;
+import com.vodafone.dca.common.DcaChannelNames;
 import com.vodafone.dca.domain.DataTransporter;
+import com.vodafone.dca.domain.InstanceTemplate;
 import com.vodafone.dca.domain.properties.LacCellFilterProperties;
 import com.vodafone.dca.domain.properties.MultiInstancesProperties;
 import com.vodafone.dca.domain.properties.OutputProperties;
@@ -91,8 +94,9 @@ public class DynamicInstancesFlowConfig {
 			
 			createReductionMapHandler(instanceContext);
 			createAndRegisterPepperManager(instanceContext);
-
-			createAndRegisterLacCellFilter(instanceContext);
+			if(instanceContext.instance.getTemplate() != InstanceTemplate.ROAMERS) {
+				createAndRegisterLacCellFilter(instanceContext);
+			}
 			createAndRegisterDataReductionFilter(instanceContext);
 			createAndRegisterMapFieldReducer(instanceContext);
 			createAndRegisterAccumulator(instanceContext);
@@ -195,7 +199,7 @@ public class DynamicInstancesFlowConfig {
 			case HULL:
 				return createHullInputFlow(instanceContext);
 			case ROAMERS:
-				throw new RuntimeException("ROAMERS flow is not implemented yet.");
+				return createRoamersInputFlow(instanceContext);
 			default:
 				throw new RuntimeException("Invalid template type. " + instanceContext.instance.getTemplate());
 		}
@@ -207,6 +211,17 @@ public class DynamicInstancesFlowConfig {
 				.split()
 				.<DataTransporter>handle((dataTransporter, h) -> dataTransporter.resetShadowMap())
 				.filter(instanceContext.lacCellFilter, e -> e.discardChannel(NULL_CHANNEL))
+				.filter(instanceContext.dataReductionFilter, e -> e.discardChannel(NULL_CHANNEL))
+				.transform(instanceContext.mapFieldReducer)
+				.<String>handle((p, h) -> instanceContext.accumulator.accumulate(p))
+				.nullChannel();
+	}
+	
+	protected IntegrationFlow createRoamersInputFlow(InstanceContext instanceContext) {
+		LOG.info("listening to {}", instanceContext.inputChannel);
+		return IntegrationFlows.from(instanceContext.inputChannel)
+				.split()
+				.<DataTransporter>handle((dataTransporter, h) -> dataTransporter.resetShadowMap())
 				.filter(instanceContext.dataReductionFilter, e -> e.discardChannel(NULL_CHANNEL))
 				.transform(instanceContext.mapFieldReducer)
 				.<String>handle((p, h) -> instanceContext.accumulator.accumulate(p))
@@ -252,7 +267,9 @@ public class DynamicInstancesFlowConfig {
 	}
 	
 	private String channelInputName(PerInstanceProperties instance) {
-		return DCA_EVENT_INPUT_CHANNEL_FLOW_PREFIX + "-" + instance.getName();
+		return instance.getTemplate() == InstanceTemplate.ROAMERS 
+				? DCA_ROAMERS_INPUT_CHANNEL_FLOW_PREFIX + "-" + instance.getName()
+				: DCA_EVENT_INPUT_CHANNEL_FLOW_PREFIX + "-" + instance.getName();
 	}
 	
 	private String channelOutputName(PerInstanceProperties instance) {

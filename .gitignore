@@ -1,5 +1,6 @@
 .gradle
 build/
+rti-2122/
 bin/
 modules/
 misc/

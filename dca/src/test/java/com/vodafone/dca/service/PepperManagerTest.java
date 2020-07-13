@@ -1,7 +1,7 @@
 package com.vodafone.dca.service;
 
-import static com.vodafone.dca.utils.RandomDataGenerator.generateIntInRange;
-import static com.vodafone.dca.utils.RandomDataGenerator.generateString;
+import static com.vodafone.dca.utils.RandomBasedTestObjectGenerator.generateIntInRange;
+import static com.vodafone.dca.utils.RandomBasedTestObjectGenerator.generateString;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Set;
@@ -12,7 +12,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.vodafone.dca.domain.DataTransporter;
-import com.vodafone.dca.utils.RandomDataGenerator;
+import com.vodafone.dca.utils.RandomBasedTestObjectGenerator;
 
 public class PepperManagerTest {
 	
@@ -27,7 +27,7 @@ public class PepperManagerTest {
 		underTest.setCronTrigger("*/2 * * * * *");
 		underTest.startUpdaterIfDynamic();
 
-		DataTransporter input = RandomDataGenerator.generateEvent();
+		DataTransporter input = RandomBasedTestObjectGenerator.generateNowEvent();
 
 		Set<String> peppers = Sets.newHashSet();
 		
@@ -47,7 +47,7 @@ public class PepperManagerTest {
 		underTest.startUpdaterIfDynamic();
 		
 		int testCount = generateIntInRange(40, 100);
-		DataTransporter input = RandomDataGenerator.generateEvent();
+		DataTransporter input = RandomBasedTestObjectGenerator.generateNowEvent();
 
 		for(int index = 0; index < testCount; index++) {
 			assertEquals(pepper, underTest.getSaltForTime(input));

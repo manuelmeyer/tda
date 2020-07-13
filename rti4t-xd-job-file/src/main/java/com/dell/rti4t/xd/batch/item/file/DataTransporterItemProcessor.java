@@ -10,7 +10,7 @@ import org.springframework.batch.item.ItemProcessor;
 import com.dell.rti4t.xd.domain.DataTransporter;
 import com.dell.rti4t.xd.filter.EventFilter;
 
-public class DataTransporterItemProcessor implements ItemProcessor<DataTransporter, DataTransporter>{
+public class DataTransporterItemProcessor implements ItemProcessor<DataTransporter, DataTransporter> {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(DataTransporterItemProcessor.class);
 	

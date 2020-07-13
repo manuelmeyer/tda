@@ -38,6 +38,7 @@ public class PepperManagerImpl implements InitializingBean, PepperManager {
 		}
 		
 		String getPepperFor(long timeUTC) {
+			LOG.info("value {} threshold {} saltedIntervals {}", timeUTC, threshold, timeUTC < threshold ? 0 : 1);
 			return timeUTC < threshold ? saltedIntervals[0] : saltedIntervals[1];
 		}
 		
@@ -139,6 +140,7 @@ public class PepperManagerImpl implements InitializingBean, PepperManager {
 			return pepper;
 		}
 		String timeUTCField = dt.getFieldValue(timeField);
+		LOG.info(" -- Value is {}", timeField);
 		long timeUTC = Long.valueOf(timeUTCField);
 		return pepperContext.getPepperFor(timeUTC);
 	}

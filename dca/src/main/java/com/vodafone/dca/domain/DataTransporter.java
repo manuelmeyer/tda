@@ -43,10 +43,7 @@ public class DataTransporter implements Serializable {
 		}
 	}
 	
-	public DataTransporter resetShadowMap() {
-		maskMap.get().clear();
-		return this;
-	}
+	static MaskMap maskMap = new MaskMap();
 	
 	public static class MaskMap extends ThreadLocal<FieldMapFilterValue> {
 		@Override
@@ -55,7 +52,10 @@ public class DataTransporter implements Serializable {
 		}
 	}
 	
-	static MaskMap maskMap = new MaskMap();
+	public DataTransporter resetShadowMap() {
+		maskMap.get().clear();
+		return this;
+	}
 	
 	private String filterValue;
 	private Map<String, Object> fields;
@@ -74,6 +74,7 @@ public class DataTransporter implements Serializable {
 	protected void setFieldsAndFilter(Map<String, Object> fields, String filterValue)  {
 		this.filterValue = filterValue;
 		this.fields = fields;
+		resetShadowMap();
 	}
 
 	public void setFields(Map<String, Object> fields) {

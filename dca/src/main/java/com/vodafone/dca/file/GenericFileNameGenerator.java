@@ -240,9 +240,11 @@ public class GenericFileNameGenerator implements FileNameGenerator {
 			}
 		}
 		String msg = (String) message.getPayload();
-		String fileName = fileInfo.getFileName(type, msg.length());;
-		LOG.info(">> file is {} writting {} lines", fileName, countLines(msg));
-		return fileName; //fileInfo.getFileName(type, msg.length());
+		String fileName = fileInfo.getFileName(type, msg.length());
+		if(LOG.isTraceEnabled()) {
+			LOG.trace(">> file is {} writting {} lines", fileName, countLines(msg));
+		}
+		return fileName;
 	}
 
 	private int countLines(String msg) {
