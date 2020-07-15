@@ -1,0 +1,2 @@
+text-protocol=io.external.codec.impl.autoconfig.CustomTextProtocolAdapterConfig
+binary-protocol=io.external.codec.impl.autoconfig.CustomBinaryProtocolAdapterConfig
